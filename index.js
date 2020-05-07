@@ -46,8 +46,10 @@ var get = function(obj, additionalSchemas, ptr) {
 
 var formatName = function(field) {
   field = JSON.stringify(field)
+  /*
   var pattern = /\[([^\[\]"]+)\]/
   while (pattern.test(field)) field = field.replace(pattern, '."+$1+"')
+  */
   return field
 }
 
