@@ -4,27 +4,13 @@ var jaystring = require('jaystring')
 var INDENT_START = /[\{\[]/
 var INDENT_END = /[\}\]]/
 
-var formats = {
-  s: function(s) {
-    return '' + s
-  },
-  d: function(d) {
-    return '' + Number(d)
-  },
-  o: function(o) {
-    return JSON.stringify(o)
-  }
-}
-
 var genfun = function() {
   var lines = []
   var indent = 0
   var vars = {}
 
   var push = function(str) {
-    var spaces = ''
-    while (spaces.length < indent*2) spaces += '  '
-    lines.push(spaces+str)
+    lines.push(' '.repeat(indent * 2) + str)
   }
 
   var pushLine = function(line) {
@@ -63,8 +49,6 @@ var genfun = function() {
     return line
   }
 
-  line.formats = formats
-
   line.toString = function() {
     return lines.join('\n')
   }
@@ -102,5 +86,4 @@ var genfun = function() {
   return line
 }
 
-genfun.formats = formats
 module.exports = genfun
