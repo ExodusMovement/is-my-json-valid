@@ -33,9 +33,9 @@ const genfun = function() {
     push(line)
   }
 
-  const line = {}
+  const builder = {}
 
-  line.write = function(fmt, ...args) {
+  builder.write = function(fmt, ...args) {
     if (typeof fmt !== 'string') throw new Error('Format must be a string!')
     if (args.length === 1 && fmt.indexOf('\n') > -1) {
       // multiple lines with no parameters, push them separately for correct indent
@@ -49,11 +49,11 @@ const genfun = function() {
     }
   }
 
-  line.toString = function() {
+  builder.toString = function() {
     return lines.join('\n')
   }
 
-  line.toModule = function(scope) {
+  builder.toModule = function(scope) {
     if (!scope) scope = {}
 
     const scopeSource = Object.entries(scope)
@@ -62,13 +62,13 @@ const genfun = function() {
       })
       .join('\n')
 
-    return `(function() {\n${scopeSource}\nreturn (${line})})();`
+    return `(function() {\n${scopeSource}\nreturn (${builder.toString()})})();`
   }
 
-  line.toFunction = function(scope) {
+  builder.toFunction = function(scope) {
     if (!scope) scope = {}
 
-    const src = 'return (' + line.toString() + ')'
+    const src = 'return (' + builder.toString() + ')'
 
     const keys = Object.keys(scope).map(function(key) {
       return key
@@ -81,7 +81,7 @@ const genfun = function() {
     return Function.apply(null, keys.concat(src)).apply(null, vals)
   }
 
-  return line
+  return builder
 }
 
 module.exports = genfun
