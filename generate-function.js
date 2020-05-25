@@ -33,10 +33,7 @@ const genfun = function() {
     push(line)
   }
 
-  const line = function(fmt, ...args) {
-    if (fmt) line.write(fmt, ...args)
-    return line
-  }
+  const line = {}
 
   line.write = function(fmt, ...args) {
     if (typeof fmt !== 'string') throw new Error('Format must be a string!')
@@ -83,8 +80,6 @@ const genfun = function() {
 
     return Function.apply(null, keys.concat(src)).apply(null, vals)
   }
-
-  if (arguments.length) line.apply(null, arguments)
 
   return line
 }
