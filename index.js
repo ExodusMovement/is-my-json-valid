@@ -113,9 +113,12 @@ const compile = function(schema, cache, root, reporter, opts) {
   const verbose = opts ? !!opts.verbose : false
   const greedy = opts && opts.greedy !== undefined ? opts.greedy : false
 
-  const syms = {}
-  const gensym = function(name) {
-    return name + (syms[name] = (syms[name] || 0) + 1)
+  const syms = new Map()
+  const gensym = (name) => {
+    if (!syms.get(name)) syms.set(name, 0)
+    const index = syms.get(name)
+    syms.set(name, index + 1)
+    return name + index
   }
 
   const reversePatterns = {}
@@ -127,7 +130,7 @@ const compile = function(schema, cache, root, reporter, opts) {
     return n
   }
 
-  const vars = ['i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'x', 'y', 'z']
+  const vars = 'ijklmnopqrstuvxyz'.split('')
   const genloop = function() {
     const v = vars.shift()
     vars.push(v + v[0])
@@ -143,11 +146,11 @@ const compile = function(schema, cache, root, reporter, opts) {
 
   const visit = function(name, node, reporter, filter, schemaPath) {
     if (node.constructor.toString() === Object.toString()) {
-      Object.keys(node).forEach(function checkKeywordSupported(keyword) {
+      for (const keyword of Object.keys(node)) {
         if (!KNOWN_KEYWORDS.includes(keyword)) {
           throw new Error(`Keyword not supported: ${keyword}`)
         }
-      })
+      }
     }
 
     let properties = node.properties
@@ -156,10 +159,7 @@ const compile = function(schema, cache, root, reporter, opts) {
 
     if (Array.isArray(node.items)) {
       // tuple type
-      properties = {}
-      node.items.forEach(function(item, i) {
-        properties[i] = item
-      })
+      properties = {...node.items}
       type = 'array'
       tuple = true
     }
@@ -309,7 +309,7 @@ const compile = function(schema, cache, root, reporter, opts) {
     if (node.dependencies) {
       if (type !== 'object') fun.write('if (%s) {', types.object(name))
 
-      Object.keys(node.dependencies).forEach(function(key) {
+      for (const key of Object.keys(node.dependencies)) {
         let deps = node.dependencies[key]
         if (typeof deps === 'string') deps = [deps]
 
@@ -331,7 +331,7 @@ const compile = function(schema, cache, root, reporter, opts) {
           visit(name, deps, reporter, filter, schemaPath.concat(['dependencies', key]))
           fun.write('}')
         }
-      })
+      }
 
       if (type !== 'object') fun.write('}')
     }
@@ -426,7 +426,7 @@ const compile = function(schema, cache, root, reporter, opts) {
       fun.write('var %s = Object.keys(%s)', keys, name)
       fun.write('for (var %s = 0; %s < %s.length; %s++) {', i, i, keys, i)
 
-      Object.keys(node.patternProperties).forEach(function(key) {
+      for (const key of Object.keys(node.patternProperties)) {
         const p = patterns(key)
         fun.write('if (%s.test(%s)) {', p, `${keys}[${i}]`)
         visit(
@@ -437,7 +437,7 @@ const compile = function(schema, cache, root, reporter, opts) {
           schemaPath.concat(['patternProperties', key])
         )
         fun.write('}')
-      })
+      }
 
       fun.write('}')
       if (type !== 'object') fun.write('}')
@@ -591,7 +591,7 @@ const compile = function(schema, cache, root, reporter, opts) {
     }
 
     if (properties) {
-      Object.keys(properties).forEach(function(p) {
+      for (const p of Object.keys(properties)) {
         if (Array.isArray(type) && type.indexOf('null') !== -1)
           fun.write('if (%s !== null) {', name)
 
@@ -604,7 +604,7 @@ const compile = function(schema, cache, root, reporter, opts) {
         )
 
         if (Array.isArray(type) && type.indexOf('null') !== -1) fun.write('}')
-      })
+      }
     }
 
     while (indent--) fun.write('}')
@@ -659,10 +659,10 @@ module.exports.filter = function(schema, opts) {
 // Improve performance of generated IIFE modules by filtering unneeded scope
 function filterScope(source, scope) {
   const filtered = {}
-  Object.keys(scope).forEach(function(key) {
+  for (const key of Object.keys(scope)) {
     if (source.includes(key)) {
       filtered[key] = scope[key]
     }
-  })
+  }
   return filtered
 }

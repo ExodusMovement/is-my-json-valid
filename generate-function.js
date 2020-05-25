@@ -8,29 +8,14 @@ const genfun = function() {
   const lines = []
   let indent = 0
 
-  const push = function(str) {
+  const push = (str) => {
     lines.push(' '.repeat(indent * 2) + str)
   }
 
-  const pushLine = function(line) {
-    if (INDENT_END.test(line.trim()[0]) && INDENT_START.test(line[line.length - 1])) {
-      indent--
-      push(line)
-      indent++
-      return
-    }
-    if (INDENT_START.test(line[line.length - 1])) {
-      push(line)
-      indent++
-      return
-    }
-    if (INDENT_END.test(line.trim()[0])) {
-      indent--
-      push(line)
-      return
-    }
-
+  const pushLine = (line) => {
+    if (INDENT_END.test(line.trim()[0])) indent--
     push(line)
+    if (INDENT_START.test(line[line.length - 1])) indent++
   }
 
   const builder = {}
@@ -53,31 +38,17 @@ const genfun = function() {
     return lines.join('\n')
   }
 
-  builder.toModule = function(scope) {
-    if (!scope) scope = {}
-
+  builder.toModule = function(scope = {}) {
     const scopeSource = Object.entries(scope)
-      .map(function([key, value]) {
-        return `var ${key} = ${jaystring(value)};`
-      })
+      .map(([key, value]) => `const ${key} = ${jaystring(value)};`)
       .join('\n')
-
     return `(function() {\n${scopeSource}\nreturn (${builder.toString()})})();`
   }
 
-  builder.toFunction = function(scope) {
-    if (!scope) scope = {}
-
+  builder.toFunction = function(scope = {}) {
     const src = `return (${builder.toString()})`
-
-    const keys = Object.keys(scope).map(function(key) {
-      return key
-    })
-
-    const vals = keys.map(function(key) {
-      return scope[key]
-    })
-
+    const keys = Object.keys(scope)
+    const vals = keys.map((key) => scope[key])
     return Function.apply(null, keys.concat(src)).apply(null, vals)
   }
 
