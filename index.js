@@ -57,38 +57,15 @@ const formatName = function(field) {
 }
 
 const types = {}
-
-types.any = function() {
-  return 'true'
-}
-
-types.null = function(name) {
-  return `${name} === null`
-}
-
-types.boolean = function(name) {
-  return `typeof ${name} === "boolean"`
-}
-
-types.array = function(name) {
-  return `Array.isArray(${name})`
-}
-
-types.object = function(name) {
-  return `typeof ${name} === "object" && ${name} && !Array.isArray(${name})`
-}
-
-types.number = function(name) {
-  return `typeof ${name} === "number" && isFinite(${name})`
-}
-
-types.integer = function(name) {
-  return `typeof ${name} === "number" && (Math.floor(${name}) === ${name} || ${name} > 9007199254740992 || ${name} < -9007199254740992)`
-}
-
-types.string = function(name) {
-  return `typeof ${name} === "string"`
-}
+types.any = () => 'true'
+types.null = (name) => `${name} === null`
+types.boolean = (name) => `typeof ${name} === "boolean"`
+types.array = (name) => `Array.isArray(${name})`
+types.object = (name) => `typeof ${name} === "object" && ${name} && !Array.isArray(${name})`
+types.number = (name) => `typeof ${name} === "number" && isFinite(${name})`
+types.integer = (name) =>
+  `typeof ${name} === "number" && (Math.floor(${name}) === ${name} || ${name} > 9007199254740992 || ${name} < -9007199254740992)`
+types.string = (name) => `typeof ${name} === "string"`
 
 const unique = function(array) {
   const list = []
