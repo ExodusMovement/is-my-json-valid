@@ -615,11 +615,11 @@ const compile = function(schema, cache, root, reporter, opts) {
   fun.write('return errors === 0')
   fun.write('}')
 
-  const filteredScope = filterScope(fun.toString(), scope)
+  const filteredScope = filterScope(fun.makeRawSource(), scope)
 
-  const validate = fun.toFunction(filteredScope)
+  const validate = fun.makeFunction(filteredScope)
   validate.toModule = function() {
-    return fun.toModule(filteredScope)
+    return fun.makeModule(filteredScope)
   }
   validate.errors = null
 

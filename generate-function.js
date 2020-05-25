@@ -34,19 +34,19 @@ const genfun = function() {
     }
   }
 
-  builder.toString = function() {
+  builder.makeRawSource = function() {
     return lines.join('\n')
   }
 
-  builder.toModule = function(scope = {}) {
+  builder.makeModule = function(scope = {}) {
     const scopeSource = Object.entries(scope)
       .map(([key, value]) => `const ${key} = ${jaystring(value)};`)
       .join('\n')
-    return `(function() {\n${scopeSource}\nreturn (${builder.toString()})})();`
+    return `(function() {\n${scopeSource}\nreturn (${builder.makeRawSource()})})();`
   }
 
-  builder.toFunction = function(scope = {}) {
-    const src = `return (${builder.toString()})`
+  builder.makeFunction = function(scope = {}) {
+    const src = `return (${builder.makeRawSource()})`
     const keys = Object.keys(scope)
     const vals = keys.map((key) => scope[key])
     return Function.apply(null, keys.concat(src)).apply(null, vals)
