@@ -4,7 +4,7 @@ const jaystring = require('jaystring')
 const INDENT_START = /[{[]/
 const INDENT_END = /[}\]]/
 
-const genfun = function() {
+module.exports = function() {
   const lines = []
   let indent = 0
 
@@ -18,41 +18,37 @@ const genfun = function() {
     if (INDENT_START.test(line[line.length - 1])) indent++
   }
 
-  const builder = {}
-
-  builder.write = function(fmt, ...args) {
-    if (typeof fmt !== 'string') throw new Error('Format must be a string!')
-    if (args.length === 1 && fmt.indexOf('\n') > -1) {
-      // multiple lines with no parameters, push them separately for correct indent
-      const lines = fmt.trim().split('\n')
-      for (const line of lines) {
-        pushLine(line.trim())
+  return {
+    write(fmt, ...args) {
+      if (typeof fmt !== 'string') throw new Error('Format must be a string!')
+      if (args.length === 1 && fmt.indexOf('\n') > -1) {
+        // multiple lines with no parameters, push them separately for correct indent
+        const lines = fmt.trim().split('\n')
+        for (const line of lines) {
+          pushLine(line.trim())
+        }
+      } else {
+        // format + parameters case
+        pushLine(utilFormat(fmt, ...args))
       }
-    } else {
-      // format + parameters case
-      pushLine(utilFormat(fmt, ...args))
+    },
+
+    makeRawSource() {
+      return lines.join('\n')
+    },
+
+    makeModule(scope = {}) {
+      const scopeSource = Object.entries(scope)
+        .map(([key, value]) => `const ${key} = ${jaystring(value)};`)
+        .join('\n')
+      return `(function() {\n${scopeSource}\nreturn (${this.makeRawSource()})})();`
+    },
+
+    makeFunction(scope = {}) {
+      const src = `return (${this.makeRawSource()})`
+      const keys = Object.keys(scope)
+      const vals = keys.map((key) => scope[key])
+      return Function.apply(null, keys.concat(src)).apply(null, vals)
     }
   }
-
-  builder.makeRawSource = function() {
-    return lines.join('\n')
-  }
-
-  builder.makeModule = function(scope = {}) {
-    const scopeSource = Object.entries(scope)
-      .map(([key, value]) => `const ${key} = ${jaystring(value)};`)
-      .join('\n')
-    return `(function() {\n${scopeSource}\nreturn (${builder.makeRawSource()})})();`
-  }
-
-  builder.makeFunction = function(scope = {}) {
-    const src = `return (${builder.makeRawSource()})`
-    const keys = Object.keys(scope)
-    const vals = keys.map((key) => scope[key])
-    return Function.apply(null, keys.concat(src)).apply(null, vals)
-  }
-
-  return builder
 }
-
-module.exports = genfun
