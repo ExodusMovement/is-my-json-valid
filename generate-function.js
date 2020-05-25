@@ -1,4 +1,4 @@
-const util = require('util')
+const { format: utilFormat } = require('util')
 const jaystring = require('jaystring')
 
 const INDENT_START = /[{[]/
@@ -33,19 +33,23 @@ const genfun = function() {
     push(line)
   }
 
-  const line = function(fmt) {
-    if (!fmt) return line
+  const line = function(fmt, ...args) {
+    if (fmt) line.write(fmt, ...args)
+    return line
+  }
 
-    if (arguments.length === 1 && fmt.indexOf('\n') > -1) {
+  line.write = function(fmt, ...args) {
+    if (typeof fmt !== 'string') throw new Error('Format must be a string!')
+    if (args.length === 1 && fmt.indexOf('\n') > -1) {
+      // multiple lines with no parameters, push them separately for correct indent
       const lines = fmt.trim().split('\n')
-      for (let i = 0; i < lines.length; i++) {
-        pushLine(lines[i].trim())
+      for (const line of lines) {
+        pushLine(line.trim())
       }
     } else {
-      pushLine(util.format.apply(util, arguments))
+      // format + parameters case
+      pushLine(utilFormat(fmt, ...args))
     }
-
-    return line
   }
 
   line.toString = function() {
