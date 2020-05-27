@@ -10,14 +10,20 @@ const unsupported = new Set([
   'ref.json',
 ])
 
-const schemaDraftDir = path.join(__dirname, '/json-schema-draft4')
+const schemaDir = path.join(__dirname, '/json-schema-draft4')
 
 function processTestDir(subdir = '') {
-  const dir = path.join(schemaDraftDir, subdir)
+  const dir = path.join(schemaDir, subdir)
   for (const file of fs.readdirSync(dir)) {
-    if (unsupported.has(path.join(subdir, file))) continue
-    const content = fs.readFileSync(path.join(dir, file))
-    processTest(JSON.parse(content))
+    const sub = path.join(subdir, file) // relative to schemaDir
+    if (unsupported.has(sub)) continue
+    if (file.endsWith('.json')) {
+      const content = fs.readFileSync(path.join(schemaDir, sub))
+      processTest(JSON.parse(content))
+    } else {
+      // assume it's a dir and let it fail otherwise
+      processTestDir(sub)
+    }
   }
 }
 
