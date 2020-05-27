@@ -274,6 +274,10 @@ const compile = function(schema, cache, root, reporter, opts) {
         fun.write('}')
         consume('additionalItems')
       }
+    } else {
+      // WARNING, it's allowed, but ignored per spec tests in this case!
+      // TODO: do not allow in strong mode
+      consume('additionalItems', false)
     }
 
     if (node.format && fmts.hasOwnProperty(node.format)) {
