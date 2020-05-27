@@ -100,6 +100,9 @@ const isMultipleOf = function(value, multipleOf) {
   return Math.round(factor * value) % Math.round(factor * multipleOf) === 0
 }
 
+// for correct Unicode code points processing
+const stringLength = (string) => [...string].length
+
 const compile = function(schema, cache, root, reporter, opts) {
   const fmts = opts ? Object.assign({}, formats, opts.formats) : formats
   const scope = Object.create(null)
@@ -548,7 +551,8 @@ const compile = function(schema, cache, root, reporter, opts) {
     if (node.maxLength !== undefined) {
       if (type !== 'string') fun.write('if (%s) {', types.string(name))
 
-      fun.write('if (%s.length > %d) {', name, node.maxLength)
+      scope.stringLength = stringLength
+      fun.write('if (stringLength(%s) > %d) {', name, node.maxLength)
       error('has longer length than allowed')
       fun.write('}')
 
@@ -558,7 +562,8 @@ const compile = function(schema, cache, root, reporter, opts) {
     if (node.minLength !== undefined) {
       if (type !== 'string') fun.write('if (%s) {', types.string(name))
 
-      fun.write('if (%s.length < %d) {', name, node.minLength)
+      scope.stringLength = stringLength
+      fun.write('if (stringLength(%s) < %d) {', name, node.minLength)
       error('has less length than allowed')
       fun.write('}')
 
