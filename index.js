@@ -101,6 +101,7 @@ const isMultipleOf = function(value, multipleOf) {
 }
 
 // for correct Unicode code points processing
+// https://mathiasbynens.be/notes/javascript-unicode#accounting-for-astral-symbols
 const stringLength = (string) => [...string].length
 
 const compile = function(schema, cache, root, reporter, opts) {
