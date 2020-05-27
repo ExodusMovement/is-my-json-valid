@@ -29,11 +29,11 @@ function processTestDir(subdir = '') {
 
 function processTest(id, file) {
   for (const block of file) {
-    if (unsupported.has(block.description)) continue
-    tape(`json-schema-test-suite ${id} ${block.description}`, (t) => {
+    if (unsupported.has(`${id}/${block.description}`)) continue
+    tape(`json-schema-test-suite ${id}/${block.description}`, (t) => {
       const validate = validator(block.schema)
       for (const test of block.tests) {
-        if (unsupported.has(test.description)) continue
+        if (unsupported.has(`${id}/${block.description}/${test.description}`)) continue
         t.same(validate(test.data), test.valid, test.description)
       }
       t.end()
