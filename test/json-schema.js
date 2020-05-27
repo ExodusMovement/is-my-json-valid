@@ -4,13 +4,23 @@ const path = require('path')
 const validator = require('../')
 
 const unsupported = new Set([
+  // Directories
+  'optional',
   // Files
   'definitions.json',
   'refRemote.json',
   'ref.json',
+  // Blocks
+  'format.json/validation of IP addresses',
+  'format.json/validation of IPv6 addresses',
+  'items.json/items and subitems',
+  // Specific tests
+  'items.json/an array of schemas for items/JavaScript pseudo-array is valid',
+  'maxLength.json/maxLength validation/two supplementary Unicode code points is long enough',
+  'minLength.json/minLength validation/one supplementary Unicode code point is not long enough',
 ])
 
-const schemaDir = path.join(__dirname, '/json-schema-draft4')
+const schemaDir = path.join(__dirname, '/json-schema/draft4')
 
 function processTestDir(subdir = '') {
   const dir = path.join(schemaDir, subdir)
