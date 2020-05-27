@@ -579,19 +579,20 @@ const compile = function(schema, cache, root, reporter, opts) {
       consume('oneOf')
     }
 
-    if (node.multipleOf !== undefined) {
-      if (!Number.isFinite(node.multipleOf)) throw new Error('Invalid multipleOf')
+    const multipleOf = node.multipleOf !== undefined ? 'multipleOf' : 'divisibleBy' // draft3 support
+    if (node[multipleOf] !== undefined) {
+      if (!Number.isFinite(node[multipleOf])) throw new Error(`Invalid ${multipleOf}`)
       validateTypeApplicable('number', 'integer')
       if (type !== 'number' && type !== 'integer') fun.write('if (%s) {', types.number(name))
 
       scope.isMultipleOf = isMultipleOf
-      fun.write('if (!isMultipleOf(%s, %d)) {', name, node.multipleOf)
+      fun.write('if (!isMultipleOf(%s, %d)) {', name, node[multipleOf])
 
       error('has a remainder')
       fun.write('}')
 
       if (type !== 'number' && type !== 'integer') fun.write('}')
-      consume('multipleOf')
+      consume(multipleOf)
     }
 
     if (node.maxProperties !== undefined) {
