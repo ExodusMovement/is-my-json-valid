@@ -19,7 +19,7 @@ function processTestDir(subdir = '') {
     if (unsupported.has(sub)) continue
     if (file.endsWith('.json')) {
       const content = fs.readFileSync(path.join(schemaDir, sub))
-      processTest(JSON.parse(content))
+      processTest(sub, JSON.parse(content))
     } else {
       // assume it's a dir and let it fail otherwise
       processTestDir(sub)
@@ -27,10 +27,10 @@ function processTestDir(subdir = '') {
   }
 }
 
-function processTest(file) {
+function processTest(id, file) {
   for (const block of file) {
     if (unsupported.has(block.description)) continue
-    tape(`json-schema-test-suite ${block.description}`, (t) => {
+    tape(`json-schema-test-suite ${id} ${block.description}`, (t) => {
       const validate = validator(block.schema)
       for (const test of block.tests) {
         if (unsupported.has(test.description)) continue
