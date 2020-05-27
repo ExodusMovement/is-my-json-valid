@@ -16,8 +16,6 @@ const unsupported = new Set([
   'items.json/items and subitems',
   // Specific tests
   'items.json/an array of schemas for items/JavaScript pseudo-array is valid',
-  'maxLength.json/maxLength validation/two supplementary Unicode code points is long enough',
-  'minLength.json/minLength validation/one supplementary Unicode code point is not long enough',
 ])
 
 const schemaDir = path.join(__dirname, '/json-schema/draft4')
