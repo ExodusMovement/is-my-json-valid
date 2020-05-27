@@ -168,6 +168,18 @@ const compile = function(schema, cache, root, reporter, opts) {
       }
     }
 
+    if (typeof node === 'boolean') {
+      if (node === true) {
+        // any is valid
+        // TODO: don't allow in strong mode
+      } else { // node === false
+        fun.write('if (%s !== undefined) {', name)
+        error('is unexpected')
+        fun.write('}')
+      }
+      return
+    }
+
     if (node.constructor.toString() === Object.toString()) {
       for (const keyword of Object.keys(node)) {
         if (!KNOWN_KEYWORDS.includes(keyword)) {
