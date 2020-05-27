@@ -611,14 +611,8 @@ const compile = function(schema, cache, root, reporter, opts) {
   validateScope(fun.makeRawSource(), scope)
 
   const validate = fun.makeFunction(scope)
-  validate.toModule = function() {
-    return fun.makeModule(scope)
-  }
-
-  validate.toJSON = function() {
-    return schema
-  }
-
+  validate.toModule = () => fun.makeModule(scope)
+  validate.toJSON = () => schema
   return validate
 }
 
