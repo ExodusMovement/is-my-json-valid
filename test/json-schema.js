@@ -41,12 +41,17 @@ function processTest(id, file) {
   for (const block of file) {
     if (unsupported.has(`${id}/${block.description}`)) continue
     tape(`json-schema-test-suite ${id}/${block.description}`, (t) => {
-      const validate = validator(block.schema)
-      for (const test of block.tests) {
-        if (unsupported.has(`${id}/${block.description}/${test.description}`)) continue
-        t.same(validate(test.data), test.valid, test.description)
+      try {
+        const validate = validator(block.schema)
+        for (const test of block.tests) {
+          if (unsupported.has(`${id}/${block.description}/${test.description}`)) continue
+          t.same(validate(test.data), test.valid, test.description)
+        }
+      } catch (e) {
+        t.fail(e)
+      } finally {
+        t.end()
       }
-      t.end()
     })
   }
 }
