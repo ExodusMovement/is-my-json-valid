@@ -5,7 +5,10 @@ const formats = require('./formats')
 const KNOWN_KEYWORDS = require('./known-keywords')
 
 // name is assumed to be already processed and can contain complex paths
-const genobj = (name, property) => `${name}[${JSON.stringify(property)}]`
+const genobj = (name, property) => {
+  if (!['string', 'number'].includes(typeof property)) throw new Error('Invalid property path')
+  return `${name}[${JSON.stringify(property)}]`
+}
 
 const get = function(obj, additionalSchemas, ptr) {
   const visit = function(sub) {
