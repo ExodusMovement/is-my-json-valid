@@ -684,28 +684,23 @@ const compile = function(schema, root, reporter, opts, scope) {
       if (typeof node.exclusiveMaximum === 'boolean') consume('exclusiveMaximum')
     }
 
-    if (Array.isArray(node.items)) {
+    if (node.items) {
       validateTypeApplicable('array')
       if (type !== 'array') fun.write('if (%s) {', types.array(name))
-      const properties = { ...node.items }
-      for (const p of Object.keys(properties)) {
-        if (Array.isArray(type) && type.indexOf('null') !== -1)
-          fun.write('if (%s !== null) {', name)
 
-        visit(genobj(name, p), properties[p], reporter, schemaPath.concat(p))
-
-        if (Array.isArray(type) && type.indexOf('null') !== -1) fun.write('}')
+      if (Array.isArray(node.items)) {
+        for (let p = 0; p < node.items.length; p++) {
+          if (Array.isArray(type) && type.indexOf('null') !== -1)
+            fun.write('if (%s !== null) {', name)
+          visit(genobj(name, p), node.items[p], reporter, schemaPath.concat(`${p}`))
+          if (Array.isArray(type) && type.indexOf('null') !== -1) fun.write('}')
+        }
+      } else {
+        const i = genloop()
+        fun.write('for (var %s = 0; %s < %s.length; %s++) {', i, i, name, i)
+        visit(`${name}[${i}]`, node.items, reporter, schemaPath.concat('items'))
+        fun.write('}')
       }
-      if (type !== 'array') fun.write('}')
-      consume('items')
-    } else if (node.items) {
-      validateTypeApplicable('array')
-      if (type !== 'array') fun.write('if (%s) {', types.array(name))
-
-      const i = genloop()
-      fun.write('for (var %s = 0; %s < %s.length; %s++) {', i, i, name, i)
-      visit(`${name}[${i}]`, node.items, reporter, schemaPath.concat('items'))
-      fun.write('}')
 
       if (type !== 'array') fun.write('}')
       consume('items')
