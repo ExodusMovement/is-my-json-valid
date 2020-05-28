@@ -369,13 +369,13 @@ const compile = function(schema, cache, root, reporter, opts) {
       consume('uniqueItems')
     }
 
-    const makeCompare = (name, complex) =>
-      complex
-        ? (e) => {
-            scope.deepEqual = deepEqual
-            return `!deepEqual(${name}, ${JSON.stringify(e)})`
-          }
-        : (e) => `${name} !== ${JSON.stringify(e)}`
+    const makeCompare = (name, complex) => {
+      if (complex) {
+        scope.deepEqual = deepEqual
+        return (e) => `!deepEqual(${name}, ${JSON.stringify(e)})`
+      }
+      return (e) => `${name} !== ${JSON.stringify(e)}`
+    }
 
     if (node.const !== undefined) {
       const complex = typeof node.const === 'object'
