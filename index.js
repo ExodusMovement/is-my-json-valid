@@ -579,7 +579,7 @@ const compile = function(schema, cache, root, reporter, opts) {
       consume('oneOf')
     }
 
-    const multipleOf = node.multipleOf !== undefined ? 'multipleOf' : 'divisibleBy' // draft3 support
+    const multipleOf = node.multipleOf === undefined ? 'divisibleBy' : 'multipleOf' // draft3 support
     if (node[multipleOf] !== undefined) {
       if (!Number.isFinite(node[multipleOf])) throw new Error(`Invalid ${multipleOf}`)
       validateTypeApplicable('number', 'integer')
