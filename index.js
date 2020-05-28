@@ -28,28 +28,27 @@ const resolveReference = (root, additionalSchemas, ptr) => {
   try {
     return jsonpointer.get(root, decodeURI(ptr))
   } catch (err) {
-    const end = ptr.indexOf('#')
-    let other
-    // external reference
-    if (end !== 0) {
-      // fragment doesn't exist.
-      if (end === -1) {
-        other = additionalSchemas[ptr]
-      } else {
-        const ext = ptr.slice(0, end)
-        other = additionalSchemas[ext]
-        const fragment = ptr.slice(end).replace(/^#/, '')
-        try {
-          return jsonpointer.get(other, fragment)
-        } catch (err) {
-          // do nothing
-        }
-      }
-    } else {
-      other = additionalSchemas[ptr]
-    }
-    return other || null
+    // do nothing
   }
+
+  const end = ptr.indexOf('#')
+  // external reference
+  if (end === 0) {
+    return additionalSchemas[ptr]
+  } else if (end === -1) {
+    return additionalSchemas[ptr]
+  } else {
+    const ext = ptr.slice(0, end)
+    const fragment = ptr.slice(end).replace(/^#/, '')
+    try {
+      return jsonpointer.get(additionalSchemas[ext], fragment)
+    } catch (err) {
+      // do nothing
+    }
+  }
+
+  // falsy values will throw an error on usage
+  return null
 }
 
 const formatName = function(field) {
