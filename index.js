@@ -203,15 +203,12 @@ const compile = function(schema, root, reporter, opts, scope) {
       unprocessed.delete(property)
     }
 
-    let properties = node.properties
-    let type = node.type
-    let tuple = false
-
+    const { type } = node
     if (type && typeof type !== 'string' && !Array.isArray(type)) {
       // TODO: optionally enforce type being present?
       throw new Error('Unexpected type')
     }
-    if (type) consume('type') // checked below after overwrites
+    if (type) consume('type') // checked a few blocks below
 
     // defining defs are allowed, those are validated on usage
     if (typeof node.$defs === 'object') {
@@ -228,17 +225,6 @@ const compile = function(schema, root, reporter, opts, scope) {
         if (!type.some((x) => types.includes(x)))
           throw new Error(`Unexpected field in types: ${type.join(', ')}`)
       } else throw new Error('Unexpected type')
-    }
-
-    if (Array.isArray(node.items)) {
-      // tuple type
-      if (type && type !== 'array') throw new Error(`Unexpected type with items: ${type}`)
-      type = 'array'
-      tuple = true
-      properties = { ...node.items }
-      consume('items')
-    } else if (properties) {
-      consume('properties')
     }
 
     let indent = 0
@@ -282,23 +268,27 @@ const compile = function(schema, root, reporter, opts, scope) {
       fun.write('} else {')
     }
 
-    if (tuple) {
-      if (node.additionalItems === false) {
-        fun.write('if (%s.length > %d) {', name, node.items.length)
-        error('has additional items')
-        fun.write('}')
-        consume('additionalItems')
-      } else if (node.additionalItems) {
-        const i = genloop()
-        fun.write('for (var %s = %d; %s < %s.length; %s++) {', i, node.items.length, i, name, i)
-        visit(`${name}[${i}]`, node.additionalItems, reporter, schemaPath.concat('additionalItems'))
-        fun.write('}')
-        consume('additionalItems')
-      }
-    } else {
+    if (!Array.isArray(node.items)) {
       // WARNING, it's allowed, but ignored per spec tests in this case!
       // TODO: do not allow in strong mode
       consume('additionalItems', false)
+    } else if (node.additionalItems === false) {
+      validateTypeApplicable('array')
+      if (type !== 'array') fun.write('if (%s) {', types.array(name))
+      fun.write('if (%s.length > %d) {', name, node.items.length)
+      error('has additional items')
+      fun.write('}')
+      if (type !== 'array') fun.write('}')
+      consume('additionalItems')
+    } else if (node.additionalItems) {
+      validateTypeApplicable('array')
+      if (type !== 'array') fun.write('if (%s) {', types.array(name))
+      const i = genloop()
+      fun.write('for (var %s = %d; %s < %s.length; %s++) {', i, node.items.length, i, name, i)
+      visit(`${name}[${i}]`, node.additionalItems, reporter, schemaPath.concat('additionalItems'))
+      fun.write('}')
+      if (type !== 'array') fun.write('}')
+      consume('additionalItems')
     }
 
     if (node.format && fmts.hasOwnProperty(node.format)) {
@@ -424,7 +414,7 @@ const compile = function(schema, root, reporter, opts, scope) {
       }
 
       const additionalProp =
-        Object.keys(properties || {})
+        Object.keys(node.properties || {})
           .map(toCompare)
           .concat(Object.keys(node.patternProperties || {}).map(toTest))
           .join(' && ') || 'true'
@@ -479,7 +469,7 @@ const compile = function(schema, root, reporter, opts, scope) {
       consume('not')
     }
 
-    if (node.items && !tuple) {
+    if (node.items && !Array.isArray(node.items)) {
       validateTypeApplicable('array')
       if (type !== 'array') fun.write('if (%s) {', types.array(name))
 
@@ -707,20 +697,29 @@ const compile = function(schema, root, reporter, opts, scope) {
       if (typeof node.exclusiveMaximum === 'boolean') consume('exclusiveMaximum')
     }
 
-    if (properties) {
+    if (Array.isArray(node.items)) {
+      const properties = { ...node.items }
       for (const p of Object.keys(properties)) {
         if (Array.isArray(type) && type.indexOf('null') !== -1)
           fun.write('if (%s !== null) {', name)
 
-        visit(
-          genobj(name, p),
-          properties[p],
-          reporter,
-          schemaPath.concat(tuple ? p : ['properties', p])
-        )
+        visit(genobj(name, p), properties[p], reporter, schemaPath.concat(p))
 
         if (Array.isArray(type) && type.indexOf('null') !== -1) fun.write('}')
       }
+      consume('items')
+    }
+    if (typeof node.properties === 'object') {
+      validateTypeApplicable('object')
+      for (const p of Object.keys(node.properties)) {
+        if (Array.isArray(type) && type.indexOf('null') !== -1)
+          fun.write('if (%s !== null) {', name)
+
+        visit(genobj(name, p), node.properties[p], reporter, schemaPath.concat(['properties', p]))
+
+        if (Array.isArray(type) && type.indexOf('null') !== -1) fun.write('}')
+      }
+      consume('properties')
     }
 
     while (indent--) fun.write('}')
