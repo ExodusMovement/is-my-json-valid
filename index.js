@@ -162,7 +162,7 @@ const compile = function(schema, root, reporter, opts, scope) {
             formatName(prop || name),
             JSON.stringify(msg),
             value || name,
-            JSON.stringify(type),
+            JSON.stringify(node.type || 'any'),
             JSON.stringify(schemaPath)
           )
         } else {
@@ -203,28 +203,11 @@ const compile = function(schema, root, reporter, opts, scope) {
       unprocessed.delete(property)
     }
 
-    const { type } = node
-    if (type && typeof type !== 'string' && !Array.isArray(type)) {
-      // TODO: optionally enforce type being present?
-      throw new Error('Unexpected type')
-    }
-    if (type) consume('type') // checked a few blocks below
-
     // defining defs are allowed, those are validated on usage
     if (typeof node.$defs === 'object') {
       consume('$defs')
     } else if (typeof node.definitions === 'object') {
       consume('definitions')
-    }
-
-    const validateTypeApplicable = (...types) => {
-      if (!type) return // no type enforced
-      if (typeof type === 'string') {
-        if (!types.includes(type)) throw new Error(`Unexpected field in type=${type}`)
-      } else if (Array.isArray(type)) {
-        if (!type.some((x) => types.includes(x)))
-          throw new Error(`Unexpected field in types: ${type.join(', ')}`)
-      } else throw new Error('Unexpected type')
     }
 
     let indent = 0
@@ -249,23 +232,32 @@ const compile = function(schema, root, reporter, opts, scope) {
       if (node.required === false) consume('required')
     }
 
-    const valid =
-      []
-        .concat(type)
-        .map(function(t) {
-          if (t && !types.hasOwnProperty(t)) {
-            throw new Error(`Unknown type: ${t}`)
-          }
+    const { type } = node
+    if (type !== undefined && typeof type !== 'string' && !Array.isArray(type)) {
+      // TODO: optionally enforce type being present?
+      throw new Error('Unexpected type')
+    }
 
-          return types[t || 'any'](name)
-        })
-        .join(' || ') || 'true'
+    const typeArray = type ? (Array.isArray(type) ? type : [type]) : []
+    for (const t of typeArray) {
+      if (typeof t !== 'string' || !types.hasOwnProperty(t)) {
+        throw new Error(`Unknown type: ${t}`)
+      }
+    }
 
-    if (valid !== 'true') {
+    const typeValidate = typeArray.map((t) => types[t](name)).join(' || ') || 'true'
+    if (typeValidate !== 'true') {
       indent++
-      fun.write('if (!(%s)) {', valid)
+      fun.write('if (!(%s)) {', typeValidate)
       error('is the wrong type')
       fun.write('} else {')
+    }
+    if (type) consume('type')
+
+    const validateTypeApplicable = (...types) => {
+      if (!type || typeArray.includes('any')) return // no type enforced
+      if (!typeArray.some((x) => types.includes(x)))
+        throw new Error(`Unexpected field in types: ${type.join(', ')}`)
     }
 
     if (!Array.isArray(node.items)) {
