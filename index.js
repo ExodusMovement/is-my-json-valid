@@ -103,6 +103,29 @@ const isMultipleOf = function(value, multipleOf) {
   return Math.round(factor * value) % Math.round(factor * multipleOf) === 0
 }
 
+// supports only JSON-stringifyable objects, defaults to false for unsupported
+// also uses ===, not Object.is, i.e. 0 === -0, NaN !== NaN
+// symbols and non-enumerable properties are ignored!
+const deepEqual = (obj, obj2) => {
+  if (obj === obj2) return true
+  if (!obj || !obj2 || typeof obj !== typeof obj2) return false
+
+  const proto = Object.getPrototypeOf(obj)
+  if (proto !== Object.getPrototypeOf(obj2)) return false
+
+  if (proto === Array.prototype) {
+    if (!Array.isArray(obj) || !Array.isArray(obj2)) return false
+    if (obj.length !== obj2.length) return false
+    return obj.every((x, i) => deepEqual(x, obj2[i]))
+  } else if (proto === Object.prototype) {
+    const [keys, keys2] = [Object.keys(obj), Object.keys(obj2)]
+    if (keys.length !== keys2.length) return false
+    const keyset2 = new Set(keys2)
+    return keys.every((key) => keyset2.has(key) && deepEqual(obj[key], obj2[key]))
+  }
+  return false
+}
+
 // for correct Unicode code points processing
 // https://mathiasbynens.be/notes/javascript-unicode#accounting-for-astral-symbols
 const stringLength = (string) => [...string].length
@@ -346,9 +369,13 @@ const compile = function(schema, cache, root, reporter, opts) {
       consume('uniqueItems')
     }
 
-    const makeCompare = (name, complex) => complex
-      ? (e) => `JSON.stringify(${name}) !== ${JSON.stringify(JSON.stringify(e))}`
-      : (e) => `${name} !== ${JSON.stringify(e)}`
+    const makeCompare = (name, complex) =>
+      complex
+        ? (e) => {
+            scope.deepEqual = deepEqual
+            return `!deepEqual(${name}, ${JSON.stringify(e)})`
+          }
+        : (e) => `${name} !== ${JSON.stringify(e)}`
 
     if (node.const !== undefined) {
       const complex = typeof node.const === 'object'
