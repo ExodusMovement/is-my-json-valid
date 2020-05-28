@@ -685,6 +685,8 @@ const compile = function(schema, root, reporter, opts, scope) {
     }
 
     if (Array.isArray(node.items)) {
+      validateTypeApplicable('array')
+      if (type !== 'array') fun.write('if (%s) {', types.array(name))
       const properties = { ...node.items }
       for (const p of Object.keys(properties)) {
         if (Array.isArray(type) && type.indexOf('null') !== -1)
@@ -694,6 +696,7 @@ const compile = function(schema, root, reporter, opts, scope) {
 
         if (Array.isArray(type) && type.indexOf('null') !== -1) fun.write('}')
       }
+      if (type !== 'array') fun.write('}')
       consume('items')
     } else if (node.items) {
       validateTypeApplicable('array')
