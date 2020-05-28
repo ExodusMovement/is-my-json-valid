@@ -10,7 +10,7 @@ const genobj = (name, property) => {
   return `${name}[${JSON.stringify(property)}]`
 }
 
-const get = function(obj, additionalSchemas, ptr) {
+const resolveReference = (obj, additionalSchemas, ptr) => {
   const visit = function(sub) {
     if (sub && (sub.id || sub.$id) === ptr) return sub
     if (typeof sub !== 'object' || !sub) return null
@@ -468,7 +468,7 @@ const compile = function(schema, root, reporter, opts, scope) {
     }
 
     if (node.$ref) {
-      const sub = get(root, (opts && opts.schemas) || {}, node.$ref)
+      const sub = resolveReference(root, (opts && opts.schemas) || {}, node.$ref)
       if (sub) {
         let n = refCache.get(node.$ref)
         if (!n) {
