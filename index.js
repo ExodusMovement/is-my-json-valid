@@ -479,6 +479,8 @@ const compile = function(schema, root, reporter, opts, scope) {
         fun.write('if (!(%s(%s))) {', n, name)
         error('referenced schema does not match')
         fun.write('}')
+      } else {
+        throw new Error(`ref not found: ${node.$ref}`)
       }
       consume('$ref')
     }
