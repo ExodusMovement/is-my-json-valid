@@ -12,7 +12,7 @@ const genobj = (name, property) => {
 
 const get = function(obj, additionalSchemas, ptr) {
   const visit = function(sub) {
-    if (sub && sub.id === ptr) return sub
+    if (sub && (sub.id || sub.$id) === ptr) return sub
     if (typeof sub !== 'object' || !sub) return null
     return Object.keys(sub).reduce(function(res, k) {
       return res || visit(sub[k])
@@ -226,11 +226,18 @@ const compile = function(schema, root, reporter, opts, scope) {
       unprocessed.delete(property)
     }
 
+    if (typeof node.description === 'string') consume('description') // unused, meta-only
     // defining defs are allowed, those are validated on usage
     if (typeof node.$defs === 'object') {
       consume('$defs')
     } else if (typeof node.definitions === 'object') {
       consume('definitions')
+    }
+    // same for id
+    if (typeof node.$id === 'string') {
+      consume('$id')
+    } else if (typeof node.id === 'string') {
+      consume('id')
     }
 
     let indent = 0
