@@ -10,7 +10,7 @@ const genobj = (name, property) => {
   return `${name}[${JSON.stringify(property)}]`
 }
 
-const resolveReference = (obj, additionalSchemas, ptr) => {
+const resolveReference = (root, additionalSchemas, ptr) => {
   const visit = function(sub) {
     if (sub && (sub.id || sub.$id) === ptr) return sub
     if (typeof sub !== 'object' || !sub) return null
@@ -19,14 +19,14 @@ const resolveReference = (obj, additionalSchemas, ptr) => {
     }, null)
   }
 
-  const res = visit(obj)
+  const res = visit(root)
   if (res) return res
 
   ptr = ptr.replace(/^#/, '')
   ptr = ptr.replace(/\/$/, '')
 
   try {
-    return jsonpointer.get(obj, decodeURI(ptr))
+    return jsonpointer.get(root, decodeURI(ptr))
   } catch (err) {
     const end = ptr.indexOf('#')
     let other
