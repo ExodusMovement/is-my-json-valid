@@ -27,6 +27,7 @@ module.exports = [
   'patternProperties',
   'dependencies',
   'enum',
+  'const',
   'uniqueItems',
   '$ref',
   'default',

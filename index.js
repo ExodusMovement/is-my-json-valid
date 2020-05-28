@@ -346,22 +346,22 @@ const compile = function(schema, cache, root, reporter, opts) {
       consume('uniqueItems')
     }
 
-    if (node.enum) {
+    const makeCompare = (name, complex) => complex
+      ? (e) => `JSON.stringify(${name}) !== ${JSON.stringify(JSON.stringify(e))}`
+      : (e) => `${name} !== ${JSON.stringify(e)}`
+
+    if (node.const !== undefined) {
+      const complex = typeof node.const === 'object'
+      const compare = makeCompare(name, complex)
+      fun.write('if (%s) {', compare(node.const))
+      error('must be const value')
+      fun.write('}')
+      consume('const')
+    } else if (node.enum) {
       if (!Array.isArray(node.enum)) throw new Error('Invalid enum')
-
-      const complex = node.enum.some(function(e) {
-        return typeof e === 'object'
-      })
-
-      const compare = complex
-        ? function(e) {
-            return `JSON.stringify(${name})` + ` !== JSON.stringify(${JSON.stringify(e)})`
-          }
-        : function(e) {
-            return `${name} !== ${JSON.stringify(e)}`
-          }
-
-      fun.write('if (%s) {', node.enum.map(compare).join(' && ') || 'false')
+      const complex = node.enum.some((e) => typeof e === 'object')
+      const compare = makeCompare(name, complex)
+      fun.write('if (%s) {', node.enum.map(compare).join(' && '))
       error('must be an enum value')
       fun.write('}')
       consume('enum')
