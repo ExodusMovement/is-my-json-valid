@@ -469,19 +469,6 @@ const compile = function(schema, root, reporter, opts, scope) {
       consume('not')
     }
 
-    if (node.items && !Array.isArray(node.items)) {
-      validateTypeApplicable('array')
-      if (type !== 'array') fun.write('if (%s) {', types.array(name))
-
-      const i = genloop()
-      fun.write('for (var %s = 0; %s < %s.length; %s++) {', i, i, name, i)
-      visit(`${name}[${i}]`, node.items, reporter, schemaPath.concat('items'))
-      fun.write('}')
-
-      if (type !== 'array') fun.write('}')
-      consume('items')
-    }
-
     if (node.patternProperties) {
       validateTypeApplicable('object')
       if (type !== 'object') fun.write('if (%s) {', types.object(name))
@@ -708,7 +695,19 @@ const compile = function(schema, root, reporter, opts, scope) {
         if (Array.isArray(type) && type.indexOf('null') !== -1) fun.write('}')
       }
       consume('items')
+    } else if (node.items) {
+      validateTypeApplicable('array')
+      if (type !== 'array') fun.write('if (%s) {', types.array(name))
+
+      const i = genloop()
+      fun.write('for (var %s = 0; %s < %s.length; %s++) {', i, i, name, i)
+      visit(`${name}[${i}]`, node.items, reporter, schemaPath.concat('items'))
+      fun.write('}')
+
+      if (type !== 'array') fun.write('}')
+      consume('items')
     }
+
     if (typeof node.properties === 'object') {
       validateTypeApplicable('object')
       for (const p of Object.keys(node.properties)) {
