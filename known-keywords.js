@@ -1,4 +1,5 @@
 module.exports = [
+  '$schema',
   'items',
   'id', // up to draft4
   '$id', // since draft6

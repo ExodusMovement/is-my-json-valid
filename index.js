@@ -133,6 +133,14 @@ const stringLength = (string) => [...string].length
 const scopeSyms = Symbol('syms')
 const scopeRefCache = Symbol('refcache')
 
+const schemaVersions = [
+  'http://json-schema.org/draft/2019-09/schema#',
+  'http://json-schema.org/draft-07/schema#',
+  'http://json-schema.org/draft-06/schema#',
+  'http://json-schema.org/draft-04/schema#',
+  'http://json-schema.org/draft-03/schema#',
+]
+
 const compile = function(schema, root, reporter, opts, scope) {
   const fmts = opts ? Object.assign({}, formats, opts.formats) : formats
   const verbose = opts ? !!opts.verbose : false
@@ -223,6 +231,10 @@ const compile = function(schema, root, reporter, opts, scope) {
       unprocessed.delete(property)
     }
 
+    if (node === root && typeof node.$schema === 'string') {
+      if (!schemaVersions.includes(node.$schema)) throw new Error('Unexpected schema version')
+      consume('$schema') // meta-only
+    }
     if (typeof node.description === 'string') consume('description') // unused, meta-only
     // defining defs are allowed, those are validated on usage
     if (typeof node.$defs === 'object') {
