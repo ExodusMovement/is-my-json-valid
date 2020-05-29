@@ -54,10 +54,13 @@ const unsupported = new Set([
   // Optional
   'optional/zeroTerminatedFloats.json',
   'optional/non-bmp-regex.json',
-  'optional/format.json',
   'optional/format/regex.json', // deliberately unsupported
   'optional/ecmascript-regex.json', // deliberately unsupported
+  'optional/format.json/validation of regular expressions', // deliberately unsupported
   'optional/format/ecmascript-regex.json', // deliberately unsupported
+  'optional/format.json/validation of JSON-pointers (JSON String Representation)',
+  'optional/format.json/validation of URI References',
+  'optional/format.json/format: uri-template',
   'optional/format/uri-reference.json',
   'optional/format/uri-template.json',
   'optional/format/iri-reference.json',
@@ -71,6 +74,8 @@ const unsupported = new Set([
   //  draft2019-09
   'optional/refOfUnknownKeyword.json',
   'optional/format/duration.json',
+  //  draft3 only
+  'draft3/optional/format.json/validation of CSS colors',
 ])
 
 const schemaDir = path.join(__dirname, 'json-schema')
