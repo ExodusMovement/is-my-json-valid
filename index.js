@@ -399,20 +399,16 @@ const compile = function(schema, root, reporter, opts, scope) {
         let deps = node.dependencies[key]
         if (typeof deps === 'string') deps = [deps]
 
-        const exists = function(k) {
-          return `${genobj(name, k)} !== undefined`
-        }
+        const exists = (k) => `${genobj(name, k)} !== undefined`
+        const item = genobj(name, key)
 
         if (Array.isArray(deps)) {
-          fun.write(
-            'if (%s !== undefined && !(%s)) {',
-            genobj(name, key),
-            deps.map(exists).join(' && ') || 'true'
-          )
+          const condition = deps.map(exists).join(' && ') || 'true'
+          fun.write('if (%s !== undefined && !(%s)) {', item, condition)
           error('dependencies not set')
           fun.write('}')
         } else if (typeof deps === 'object' || typeof deps === 'boolean') {
-          fun.write('if (%s !== undefined) {', genobj(name, key))
+          fun.write('if (%s !== undefined) {', item)
           visit(name, deps, reporter, schemaPath.concat(['dependencies', key]))
           fun.write('}')
         } else {
