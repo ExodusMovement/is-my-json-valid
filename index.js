@@ -464,10 +464,10 @@ const compile = function(schema, root, reporter, opts, scope) {
     if (node.$ref) {
       const [sub, subRoot] = resolveReference(root, (opts && opts.schemas) || {}, node.$ref)
       if (sub || sub === false) {
-        let n = refCache.get(node.$ref)
+        let n = refCache.get(sub)
         if (!n) {
           n = gensym('ref')
-          refCache.set(node.$ref, n)
+          refCache.set(sub, n)
           let fn = null // resolve cyclic dependencies
           scope[n] = (...args) => fn(...args)
           fn = compile(sub, subRoot, false, opts, scope)
