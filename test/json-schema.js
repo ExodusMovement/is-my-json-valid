@@ -66,8 +66,6 @@ const unsupported = new Set([
   'optional/format/idn-hostname.json',
   'optional/format/json-pointer.json',
   'optional/format/relative-json-pointer.json',
-  'optional/format/time.json',
-  'optional/format/date-time.json',
   //  draft7
   'optional/content.json',
   //  draft2019-09

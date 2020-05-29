@@ -5,9 +5,6 @@
  */
 
 module.exports = {
-  'date-time': /^\d{4}-(?:0[0-9]{1}|1[0-2]{1})-[0-9]{2}[tT ]\d{2}:\d{2}:\d{2}(?:\.\d+|)([zZ]|[+-]\d{2}:\d{2})$/,
-  date: /^\d{4}-(?:0[0-9]{1}|1[0-2]{1})-[0-9]{2}$/,
-  time: /^\d{2}:\d{2}:\d{2}$/,
   email: (input) => input.indexOf('@') !== -1 && !/\s/.test(input),
   uri: /^[a-zA-Z][a-zA-Z0-9+-.]*:[^\s]*$/,
   color: /(#?([0-9A-Fa-f]{3,6})\b)|(aqua)|(black)|(blue)|(fuchsia)|(gray)|(green)|(lime)|(maroon)|(navy)|(olive)|(orange)|(purple)|(red)|(silver)|(teal)|(white)|(yellow)|(rgb\(\s*\b([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\b\s*,\s*\b([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\b\s*,\s*\b([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\b\s*\))|(rgb\(\s*(\d?\d%|100%)+\s*,\s*(\d?\d%|100%)+\s*,\s*(\d?\d%|100%)+\s*\))/,
@@ -37,6 +34,19 @@ module.exports = {
  */
 
 Object.assign(module.exports, {
+  // date: http://tools.ietf.org/html/rfc3339#section-5.6
+  // date-time: http://tools.ietf.org/html/rfc3339#section-5.6
+  // 11: 1990-01-01, 1: T, 9: 00:00:00., 12: maxiumum fraction length (non-standard), 6: +00:00
+  date: (input) => input.length === 10 && /^\d{4}-(?:0[0-9]|1[0-2])-[0-3]\d$/.test(input),
+  time: (input) =>
+    input.length <= 9 + 12 + 6 &&
+    /^(?:[0-2]\d:[0-5]\d:[0-5]\d|23:59:60)(?:\.\d+)?(?:z|[+-]\d\d(?::?\d\d)?)?$/i.test(input),
+  'date-time': (input) =>
+    input.length <= 10 + 1 + 9 + 12 + 6 &&
+    /^\d{4}-(?:0[0-9]|1[0-2])-[0-3]\d[t\s](?:[0-2]\d:[0-5]\d:[0-5]\d|23:59:60)(?:\.\d+)?(?:z|[+-]\d\d(?::?\d\d)?)$/i.test(
+      input
+    ),
+
   // optimized https://www.safaribooksonline.com/library/view/regular-expressions-cookbook/9780596802837/ch07s16.html
   ipv4: (input) =>
     input.length <= 15 &&
