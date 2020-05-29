@@ -211,12 +211,9 @@ const compile = function(schema, root, reporter, opts, scope) {
       return
     }
 
-    if (node.constructor.toString() === Object.toString()) {
-      for (const keyword of Object.keys(node)) {
-        if (!KNOWN_KEYWORDS.includes(keyword)) {
-          throw new Error(`Keyword not supported: ${keyword}`)
-        }
-      }
+    if (Object.getPrototypeOf(node) !== Object.prototype) throw new Error('Schema is not an object')
+    for (const keyword of Object.keys(node)) {
+      if (!KNOWN_KEYWORDS.includes(keyword)) throw new Error(`Keyword not supported: ${keyword}`)
     }
 
     const unprocessed = new Set(Object.keys(node))
