@@ -40,9 +40,9 @@ const unsupported = new Set([
   'format.json/validation of IRI references',
   'format.json/validation of IDN hostnames',
   'format.json/validation of IDN e-mail addresses',
-  'format.json/validation of regexes',
+  'format.json/validation of regexes', // deliberately unsupported
   //  draft3 only
-  'draft3/format.json/validation of regular expressions',
+  'draft3/format.json/validation of regular expressions', // deliberately unsupported
 
   // Blocks and individual tests
   //  draft6 and later

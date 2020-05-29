@@ -1,7 +1,7 @@
 /**
  * NOTICE
- * 'regex' delibirately not supported due to potential DoS. Don't accept regexes from untrusted sources.
- * 'style' also delibirately removed
+ * 'regex' deliberately not supported due to potential DoS. Don't accept regexes from untrusted sources.
+ * 'style' also deliberately removed
  */
 
 module.exports = {
