@@ -67,7 +67,7 @@ function resolveReference(root, additionalSchemas, ptr) {
     }
   }
 
-  // falsy values will throw an error on usage
+  // null or undefined values will throw an error on usage
   return null
 }
 

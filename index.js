@@ -427,7 +427,7 @@ const compile = function(schema, root, reporter, opts, scope) {
 
     if (node.$ref) {
       const sub = resolveReference(root, (opts && opts.schemas) || {}, node.$ref)
-      if (sub) {
+      if (sub || sub === false) {
         let n = refCache.get(node.$ref)
         if (!n) {
           n = gensym('ref')
