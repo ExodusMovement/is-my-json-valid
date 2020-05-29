@@ -4,9 +4,6 @@ const path = require('path')
 const validator = require('../')
 
 const unsupported = new Set([
-  // Directories
-  'optional',
-
   // Whole files, meaning unsupported keywords / features
   //  draft4
   'definitions.json', // FIXME: fails open!
@@ -15,7 +12,7 @@ const unsupported = new Set([
   //  draft6
   'contains.json',
   'propertyNames.json',
-  //  draft 7
+  //  draft7
   'if-then-else.json',
   //  draft2019-09
   'minContains.json',
@@ -53,6 +50,29 @@ const unsupported = new Set([
   'draft3/type.json/types can include schemas',
   'draft3/type.json/when types includes a schema it should fully validate the schema',
   'draft3/type.json/types from separate schemas are merged',
+
+  // Optional
+  'optional/zeroTerminatedFloats.json',
+  'optional/non-bmp-regex.json',
+  'optional/format.json',
+  'optional/format/regex.json', // deliberately unsupported
+  'optional/ecmascript-regex.json', // deliberately unsupported
+  'optional/format/ecmascript-regex.json', // deliberately unsupported
+  'optional/format/uri-reference.json',
+  'optional/format/uri-template.json',
+  'optional/format/iri-reference.json',
+  'optional/format/iri.json',
+  'optional/format/idn-email.json',
+  'optional/format/idn-hostname.json',
+  'optional/format/json-pointer.json',
+  'optional/format/relative-json-pointer.json',
+  'optional/format/time.json',
+  'optional/format/date-time.json',
+  //  draft7
+  'optional/content.json',
+  //  draft2019-09
+  'optional/refOfUnknownKeyword.json',
+  'optional/format/duration.json',
 ])
 
 const schemaDir = path.join(__dirname, 'json-schema')
