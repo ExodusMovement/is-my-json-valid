@@ -335,6 +335,7 @@ const compile = function(schema, root, reporter, opts, scope) {
     }
 
     if (Array.isArray(node.required)) {
+      validateTypeApplicable('object')
       const checkRequired = function(req) {
         const prop = genobj(name, req)
         fun.write('if (%s === undefined) {', prop)
@@ -342,10 +343,10 @@ const compile = function(schema, root, reporter, opts, scope) {
         fun.write('missing++')
         fun.write('}')
       }
-      fun.write('if ((%s)) {', type !== 'object' ? types.object(name) : 'true')
+      if (type !== 'object') fun.write('if (%s) {', types.object(name))
       fun.write('var missing = 0')
       node.required.map(checkRequired)
-      fun.write('}')
+      if (type !== 'object') fun.write('}')
       if (!greedy) {
         fun.write('if (missing === 0) {')
         indent++
