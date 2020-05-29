@@ -60,6 +60,14 @@ const unsupported = new Set([
 
 const schemaDir = path.join(__dirname, 'JSON-Schema-Test-Suite/tests')
 
+const schemas = {
+  'http://localhost:1234/integer.json': require('./JSON-Schema-Test-Suite/remotes/integer.json'),
+  'http://localhost:1234/subSchemas.json': require('./JSON-Schema-Test-Suite/remotes/subSchemas.json'),
+  'http://localhost:1234/folder/folderInteger.json': require('./JSON-Schema-Test-Suite/remotes/folder/folderInteger.json'),
+  'http://localhost:1234/name.json': require('./JSON-Schema-Test-Suite/remotes/name.json'),
+  'http://localhost:1234/name-defs.json': require('./JSON-Schema-Test-Suite/remotes/name-defs.json'),
+}
+
 function processTestDir(main, subdir = '') {
   const dir = path.join(schemaDir, main, subdir)
   const shouldIngore = (id) => unsupported.has(id) || unsupported.has(`${main}/${id}`)
@@ -81,7 +89,7 @@ function processTest(main, id, file, shouldIngore) {
     if (shouldIngore(`${id}/${block.description}`)) continue
     tape(`json-schema-test-suite ${main}/${id}/${block.description}`, (t) => {
       try {
-        const validate = validator(block.schema)
+        const validate = validator(block.schema, { schemas })
         for (const test of block.tests) {
           if (shouldIngore(`${id}/${block.description}/${test.description}`)) continue
           t.same(validate(test.data), test.valid, test.description)
