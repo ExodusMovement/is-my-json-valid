@@ -133,7 +133,7 @@ const stringLength = (string) => [...string].length
 const scopeSyms = Symbol('syms')
 const scopeRefCache = Symbol('refcache')
 
-const compile = function(schema, root, reporter, opts, scope) {
+const compile = function(schema, root, reporter, opts, scope, fname) {
   const fmts = opts ? Object.assign({}, formats, opts.formats) : formats
   const verbose = opts ? !!opts.verbose : false
   const greedy = opts && opts.greedy !== undefined ? opts.greedy : false
@@ -167,8 +167,10 @@ const compile = function(schema, root, reporter, opts, scope) {
     return v
   }
 
+  if (fname && reporter) throw new Error('Can not set non-default name with reporter enabled!')
+
   const fun = genfun()
-  fun.write('function validate(data) {')
+  fun.write('function %s(data) {', fname || 'validate')
   // Since undefined is not a valid JSON value, we coerce to null and other checks will catch this
   fun.write('if (data === undefined) data = null')
   if (reporter === true) fun.write('validate.errors = null')
@@ -474,7 +476,7 @@ const compile = function(schema, root, reporter, opts, scope) {
         if (!n) {
           n = gensym('ref')
           refCache.set(node.$ref, n)
-          scope[n] = compile(sub, root, false, opts, scope)
+          scope[n] = compile(sub, root, false, opts, scope, n)
         }
         fun.write('if (!(%s(%s))) {', n, name)
         error('referenced schema does not match')
