@@ -712,7 +712,7 @@ const compile = function(schema, root, reporter, opts, scope) {
       if (typeof node.exclusiveMaximum === 'boolean') consume('exclusiveMaximum')
     }
 
-    if (node.items) {
+    if (node.items || node.items === false) {
       validateTypeApplicable('array')
       if (type !== 'array') fun.write('if (%s) {', types.array(name))
 

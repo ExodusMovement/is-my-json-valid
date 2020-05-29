@@ -49,7 +49,6 @@ const unsupported = new Set([
 
   // Blocks and individual tests
   //  draft6 and later
-  'items.json/items with boolean schema (false)',
   'dependencies.json/dependencies with boolean subschemas',
   //  draft3 only
   'draft3/additionalProperties.json/additionalProperties should not look in applicators',
