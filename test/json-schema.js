@@ -31,9 +31,6 @@ const unsupported = new Set([
   'draft3/disallow.json',
 
   // Unsupported formats
-  //  draft4
-  'format.json/validation of IP addresses',
-  'format.json/validation of IPv6 addresses',
   //  draft6 and later
   'format.json/validation of JSON pointers',
   'format.json/validation of relative JSON pointers',
