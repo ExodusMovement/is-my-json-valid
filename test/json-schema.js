@@ -61,6 +61,13 @@ const unsupported = new Set([
 const schemaDir = path.join(__dirname, 'JSON-Schema-Test-Suite/tests')
 
 const schemas = {
+  // standard
+  'http://json-schema.org/draft/2019-09/schema': require('./schemas/json-schema-draft-2019-09.json'),
+  'http://json-schema.org/draft-07/schema': require('./schemas/json-schema-draft-07.json'),
+  'http://json-schema.org/draft-06/schema': require('./schemas/json-schema-draft-06.json'),
+  'http://json-schema.org/draft-04/schema': require('./schemas/json-schema-draft-04.json'),
+  'http://json-schema.org/draft-03/schema': require('./schemas/json-schema-draft-03.json'),
+  // remote
   'http://localhost:1234/integer.json': require('./JSON-Schema-Test-Suite/remotes/integer.json'),
   'http://localhost:1234/subSchemas.json': require('./JSON-Schema-Test-Suite/remotes/subSchemas.json'),
   'http://localhost:1234/folder/folderInteger.json': require('./JSON-Schema-Test-Suite/remotes/folder/folderInteger.json'),
