@@ -58,7 +58,7 @@ const unsupported = new Set([
   'draft3/type.json/types from separate schemas are merged',
 ])
 
-const schemaDir = path.join(__dirname, 'json-schema')
+const schemaDir = path.join(__dirname, 'JSON-Schema-Test-Suite/tests')
 
 function processTestDir(main, subdir = '') {
   const dir = path.join(schemaDir, main, subdir)
