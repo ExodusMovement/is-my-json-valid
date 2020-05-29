@@ -235,7 +235,12 @@ const compile = function(schema, root, reporter, opts, scope) {
       if (!schemaVersions.includes(node.$schema)) throw new Error('Unexpected schema version')
       consume('$schema') // meta-only
     }
+
     if (typeof node.description === 'string') consume('description') // unused, meta-only
+    if (typeof node.title === 'string') consume('title') // unused, meta-only
+    if (typeof node.$comment === 'string') consume('$comment') // unused, meta-only
+    if (Array.isArray(node.examples)) consume('examples') // unused, meta-only
+
     // defining defs are allowed, those are validated on usage
     if (typeof node.$defs === 'object') {
       consume('$defs')
