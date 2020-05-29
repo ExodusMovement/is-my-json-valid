@@ -1,6 +1,6 @@
 const jaystring = require('jaystring')
 const genfun = require('./generate-function')
-const jsonpointer = require('jsonpointer')
+const jsonpointer = require('./pointer')
 const formats = require('./formats')
 const KNOWN_KEYWORDS = require('./known-keywords')
 
