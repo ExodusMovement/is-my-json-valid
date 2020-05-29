@@ -462,7 +462,7 @@ const compile = function(schema, root, reporter, opts, scope) {
     }
 
     if (node.$ref) {
-      const sub = resolveReference(root, (opts && opts.schemas) || {}, node.$ref)
+      const [sub, subRoot] = resolveReference(root, (opts && opts.schemas) || {}, node.$ref)
       if (sub || sub === false) {
         let n = refCache.get(node.$ref)
         if (!n) {
@@ -470,7 +470,7 @@ const compile = function(schema, root, reporter, opts, scope) {
           refCache.set(node.$ref, n)
           let fn = null // resolve cyclic dependencies
           scope[n] = (...args) => fn(...args)
-          fn = compile(sub, root, false, opts, scope)
+          fn = compile(sub, subRoot, false, opts, scope)
           scope[n] = fn
         }
         fun.write('if (!(%s(%s))) {', n, name)
