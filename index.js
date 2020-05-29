@@ -411,7 +411,7 @@ const compile = function(schema, root, reporter, opts, scope) {
           )
           error('dependencies not set')
           fun.write('}')
-        } else if (typeof deps === 'object') {
+        } else if (typeof deps === 'object' || typeof deps === 'boolean') {
           fun.write('if (%s !== undefined) {', genobj(name, key))
           visit(name, deps, reporter, schemaPath.concat(['dependencies', key]))
           fun.write('}')

@@ -48,8 +48,6 @@ const unsupported = new Set([
   'draft3/format.json/validation of regular expressions',
 
   // Blocks and individual tests
-  //  draft6 and later
-  'dependencies.json/dependencies with boolean subschemas',
   //  draft3 only
   'draft3/additionalProperties.json/additionalProperties should not look in applicators',
   'draft3/type.json/types can include schemas',
