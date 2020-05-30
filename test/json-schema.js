@@ -62,7 +62,7 @@ const schemaDir = path.join(__dirname, 'JSON-Schema-Test-Suite/tests')
 
 const schemas = {
   // standard
-  'http://json-schema.org/draft/2019-09/schema': require('./schemas/json-schema-draft-2019-09.json'),
+  'https://json-schema.org/draft/2019-09/schema': require('./schemas/json-schema-draft-2019-09.json'),
   'http://json-schema.org/draft-07/schema': require('./schemas/json-schema-draft-07.json'),
   'http://json-schema.org/draft-06/schema': require('./schemas/json-schema-draft-06.json'),
   'http://json-schema.org/draft-04/schema': require('./schemas/json-schema-draft-04.json'),
