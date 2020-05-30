@@ -272,7 +272,8 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
     }
 
     if (node.$ref) {
-      const [sub, subRoot, path] = resolveReference(root, opts.schemas || {}, node.$ref, basePath())
+      const resolved = resolveReference(root, opts.schemas || {}, node.$ref, basePath())
+      const [sub, subRoot, path] = resolved[0] || []
       if (sub || sub === false) {
         let n = refCache.get(sub)
         if (!n) {
@@ -287,7 +288,7 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
         error('referenced schema does not match')
         fun.write('}')
       } else {
-        throw new Error(`ref not found: ${node.$ref}`)
+        throw new Error(`failed to resolve $ref: ${node.$ref}`)
       }
       consume('$ref')
 

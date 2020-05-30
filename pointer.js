@@ -35,32 +35,39 @@ function joinPath(base, sub) {
   if (sub.length === 0) return base
   base = base.replace(/#.*/, '')
   if (sub.startsWith('#')) return `${base}${sub}`
-  if (!base.includes('/')) return sub
+  if (!base.includes('/') || sub.replace(/#.*/, '').includes('://')) return sub
   if (sub.startsWith('/')) throw new Error('Unsupported yet')
   return `${base.replace(/\/?[^/]*$/, '')}/${sub}`
 }
 
-function resolveReference(root, additionalSchemas, ptr, basePath) {
-  if (basePath) return resolveReference(root, additionalSchemas, joinPath(basePath, ptr))
+function resolveReference(root, additionalSchemas, ptr, basePath = '') {
+  const results = []
 
-  // TODO: fix visit to build full paths
+  const full = joinPath(basePath, ptr)
+  if (ptr !== full) results.push(...resolveReference(root, additionalSchemas, full))
 
-  const visit = function(sub) {
-    if (sub && (sub.id || sub.$id) === ptr) return sub
-    if (typeof sub !== 'object' || !sub) return null
-    return Object.keys(sub).reduce(function(res, k) {
-      return res || visit(sub[k])
-    }, null)
+  const visit = (sub, path) => {
+    if (!sub || typeof sub !== 'object') return
+    const id = sub.$id || sub.id
+    if (id && typeof id === 'string') {
+      path = joinPath(path, id)
+      if (path === full) results.push([sub, root])
+      else if (id === ptr) {
+        results.push([sub, root])
+      }
+    }
+    for (const k of Object.keys(sub)) visit(sub[k], path)
   }
+  visit(root, '')
 
-  const res = visit(root)
-  if (res) return [res, root]
+  // TODO: fix code below
 
   ptr = ptr.replace(/^#/, '')
   ptr = ptr.replace(/\/$/, '')
 
   try {
-    return [get(root, decodeURI(ptr)), root]
+    const res = get(root, decodeURI(ptr))
+    if (res !== undefined) results.push([res, root])
   } catch (err) {
     // do nothing
   }
@@ -69,20 +76,20 @@ function resolveReference(root, additionalSchemas, ptr, basePath) {
   // external reference
   if (end === 0 || end === -1) {
     const additional = additionalSchemas[ptr]
-    return [additional, additional]
+    results.push([additional, additional])
   } else {
     const ext = ptr.slice(0, end)
     const fragment = ptr.slice(end).replace(/^#/, '')
     try {
       const additional = additionalSchemas[ext]
-      return [get(additional, fragment), additional]
+      const res = get(additional, fragment)
+      if (res !== undefined) results.push([res, additional])
     } catch (err) {
       // do nothing
     }
   }
 
-  // null or undefined values will throw an error on usage
-  return [null, null]
+  return results
 }
 
 module.exports = { get, joinPath, resolveReference }

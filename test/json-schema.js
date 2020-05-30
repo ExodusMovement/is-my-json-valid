@@ -49,10 +49,7 @@ const unsupported = new Set([
 
   // Blocks and individual tests
   //  draft4
-  'ref.json/escaped pointer ref',
   'ref.json/remote ref, containing refs itself',
-  'ref.json/Recursive references between schemas',
-  'ref.json/Location-independent identifier with base URI change in subschema',
   //  draft2019-09
   'ref.json/ref creates new scope when adjacent to keywords',
   //  draft3 only
