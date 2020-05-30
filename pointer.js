@@ -30,7 +30,21 @@ function get(obj, pointer) {
   return obj
 }
 
-function resolveReference(root, additionalSchemas, ptr) {
+function joinPath(base, sub) {
+  if (typeof base !== 'string' || typeof sub !== 'string') throw new Error('Unexpected path!')
+  if (sub.length === 0) return base
+  base = base.replace(/#.*/, '')
+  if (sub.startsWith('#')) return `${base}${sub}`
+  if (!base.includes('/')) return sub
+  if (sub.startsWith('/')) throw new Error('Unsupported yet')
+  return `${base.replace(/\/?[^/]*$/, '')}/${sub}`
+}
+
+function resolveReference(root, additionalSchemas, ptr, basePath) {
+  if (basePath) return resolveReference(root, additionalSchemas, joinPath(basePath, ptr))
+
+  // TODO: fix visit to build full paths
+
   const visit = function(sub) {
     if (sub && (sub.id || sub.$id) === ptr) return sub
     if (typeof sub !== 'object' || !sub) return null
@@ -71,4 +85,4 @@ function resolveReference(root, additionalSchemas, ptr) {
   return [null, null]
 }
 
-module.exports = { get, resolveReference }
+module.exports = { get, joinPath, resolveReference }
