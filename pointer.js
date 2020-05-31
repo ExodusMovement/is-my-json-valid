@@ -13,7 +13,7 @@ function untilde(string) {
   })
 }
 
-function get(obj, pointer) {
+function get(obj, pointer, objpath) {
   if (typeof obj !== 'object') throw new Error('Invalid input object')
   if (typeof pointer !== 'string') throw new Error('Invalid JSON pointer')
   const parts = pointer.split('/')
@@ -26,7 +26,9 @@ function get(obj, pointer) {
     if (typeof obj !== 'object') return undefined
     if (!obj.hasOwnProperty(prop)) return undefined
     obj = obj[prop]
+    if (objpath) objpath.push(obj)
   }
+  if (objpath) objpath.pop() // does not include head or result
   return obj
 }
 
@@ -38,6 +40,11 @@ function joinPath(base, sub) {
   if (!base.includes('/') || sub.replace(/#.*/, '').includes('://')) return sub
   if (sub.startsWith('/')) throw new Error('Unsupported yet')
   return `${base.replace(/\/?[^/]*$/, '')}/${sub}`
+}
+
+function objpath2path(objpath) {
+  const ids = objpath.map((obj) => (obj && (obj.$id || obj.id)) || '')
+  return ids.filter((id) => id).reduce(joinPath, '')
 }
 
 function resolveReference(root, additionalSchemas, ptr) {
@@ -53,10 +60,11 @@ function resolveReference(root, additionalSchemas, ptr) {
     if (id && typeof id === 'string') {
       path = joinPath(path, id)
       if (path === ptr || (path === main && local === '')) {
-        results.push([sub, root])
+        results.push([sub, root, ptr])
       } else if (path === main && local[0] === '/') {
-        const res = get(sub, local)
-        if (res !== undefined) results.push([res, root])
+        const objpath = []
+        const res = get(sub, local, objpath)
+        if (res !== undefined) results.push([res, root, joinPath(path, objpath2path(objpath))])
       }
     }
     for (const k of Object.keys(sub)) visit(sub[k], path)
@@ -65,8 +73,9 @@ function resolveReference(root, additionalSchemas, ptr) {
 
   // Find in self by pointer
   if (main === '' && (local[0] === '/' || local === '')) {
-    const res = get(root, local)
-    if (res !== undefined) results.push([res, root])
+    const objpath = []
+    const res = get(root, local, objpath)
+    if (res !== undefined) results.push([res, root, objpath2path(objpath)])
   }
 
   // Find in additional schemas
