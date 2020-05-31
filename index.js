@@ -272,7 +272,7 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
     }
 
     if (node.$ref) {
-      const resolved = resolveReference(root, opts.schemas || {}, node.$ref, basePath())
+      const resolved = resolveReference(root, opts.schemas || {}, joinPath(basePath(), node.$ref))
       const [sub, subRoot, path] = resolved[0] || []
       if (sub || sub === false) {
         let n = refCache.get(sub)

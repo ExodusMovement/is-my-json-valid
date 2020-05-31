@@ -40,54 +40,38 @@ function joinPath(base, sub) {
   return `${base.replace(/\/?[^/]*$/, '')}/${sub}`
 }
 
-function resolveReference(root, additionalSchemas, ptr, basePath = '') {
+function resolveReference(root, additionalSchemas, ptr) {
   const results = []
 
-  const full = joinPath(basePath, ptr)
-  if (ptr !== full) results.push(...resolveReference(root, additionalSchemas, full))
+  const [main, hash = ''] = ptr.split('#')
+  const local = decodeURI(hash).replace(/\/$/, '')
 
+  // Find in self by id path
   const visit = (sub, path) => {
     if (!sub || typeof sub !== 'object') return
     const id = sub.$id || sub.id
     if (id && typeof id === 'string') {
       path = joinPath(path, id)
-      if (path === full) results.push([sub, root])
-      else if (id === ptr) {
+      if (path === ptr || (path === main && local === '')) {
         results.push([sub, root])
+      } else if (path === main && local[0] === '/') {
+        const res = get(sub, local)
+        if (res !== undefined) results.push([res, root])
       }
     }
     for (const k of Object.keys(sub)) visit(sub[k], path)
   }
   visit(root, '')
 
-  // TODO: fix code below
-
-  ptr = ptr.replace(/^#/, '')
-  ptr = ptr.replace(/\/$/, '')
-
-  try {
-    const res = get(root, decodeURI(ptr))
+  // Find in self by pointer
+  if (main === '' && (local[0] === '/' || local === '')) {
+    const res = get(root, local)
     if (res !== undefined) results.push([res, root])
-  } catch (err) {
-    // do nothing
   }
 
-  const end = ptr.indexOf('#')
-  // external reference
-  if (end === 0 || end === -1) {
-    const additional = additionalSchemas[ptr]
-    results.push([additional, additional])
-  } else {
-    const ext = ptr.slice(0, end)
-    const fragment = ptr.slice(end).replace(/^#/, '')
-    try {
-      const additional = additionalSchemas[ext]
-      const res = get(additional, fragment)
-      if (res !== undefined) results.push([res, additional])
-    } catch (err) {
-      // do nothing
-    }
-  }
+  // Find in additional schemas
+  if (additionalSchemas.hasOwnProperty(main))
+    results.push(...resolveReference(additionalSchemas[main], additionalSchemas, `#${hash}`))
 
   return results
 }
