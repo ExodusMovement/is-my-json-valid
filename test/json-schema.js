@@ -21,7 +21,6 @@ const unsupported = new Set([
   // Whole files, meaning unsupported keywords / features
   //  draft4
   'definitions.json',
-  'refRemote.json',
   //  draft2019-09
   'anchor.json',
   'dependentSchemas.json',
@@ -29,6 +28,7 @@ const unsupported = new Set([
   'unevaluatedProperties.json',
   'unevaluatedItems.json',
   'defs.json',
+  'draft2019-09/refRemote.json', // earlier versions are fine
   //  draft3 only
   'draft3/extends.json',
   'draft3/disallow.json',

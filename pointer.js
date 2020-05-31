@@ -82,6 +82,13 @@ function resolveReference(root, additionalSchemas, ptr) {
   if (additionalSchemas.hasOwnProperty(main))
     results.push(...resolveReference(additionalSchemas[main], additionalSchemas, `#${hash}`))
 
+  // Full refs to additional schemas
+  if (additionalSchemas.hasOwnProperty(ptr))
+    results.push([additionalSchemas[ptr], additionalSchemas, ptr])
+  const altname = ptr.replace(/^#/, '').replace(/\/$/, '') // is-my-json-valid test
+  if (altname !== ptr && additionalSchemas.hasOwnProperty(altname))
+    results.push([additionalSchemas[altname], additionalSchemas, ptr])
+
   return results
 }
 
