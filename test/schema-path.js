@@ -1,6 +1,6 @@
 const tape = require('tape')
 const validator = require('../')
-const get = require('../pointer').get
+const { get } = require('../pointer')
 
 function toPointer(path) {
   if (!(path && path.length && path.join)) {
