@@ -173,8 +173,8 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
       if (!allErrors) fun.write('return false')
     }
 
-    const fail = (msg, value = '') => {
-      const comment = value && ` ${JSON.stringify(value)}`
+    const fail = (msg, value) => {
+      const comment = value !== undefined ? ` ${JSON.stringify(value)}` : ''
       throw new Error(`${msg}${comment} at #${toPointer(schemaPath)}`)
     }
     const enforce = (ok, ...args) => ok || fail(...args)
