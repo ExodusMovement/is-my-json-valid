@@ -211,8 +211,8 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
       enforce(KNOWN_KEYWORDS.includes(key) || allowUnusedKeywords, 'Keyword not supported:', key)
 
     const unused = new Set(Object.keys(node))
-    const consume = (property, required = true) => {
-      enforce(unused.has(property) || !required, 'Unexpected double consumption:', property)
+    const consume = (property) => {
+      enforce(unused.has(property), 'Unexpected double consumption:', property)
       unused.delete(property)
     }
 
