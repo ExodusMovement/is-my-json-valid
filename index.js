@@ -110,6 +110,8 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
     applyDefault = false,
     allErrors: optAllErrors = false,
     dryRun = false,
+    allowUnusedKeywords = opts.mode === 'lax',
+    requireValidation = opts.mode === 'strong',
     $schemaDefault = null,
     formats: optFormats = {},
     schemas = {},
@@ -119,8 +121,8 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
   if (unknown.length > 0) throw new Error(`Unknown options: ${Object.keys(unknown).join(', ')}`)
 
   if (!['strong', 'lax', 'default'].includes(mode)) throw new Error(`Invalid mode: ${mode}`)
-  const strong = mode === 'strong'
-  const lax = mode === 'lax'
+  if (mode === 'strong' && (!requireValidation || allowUnusedKeywords))
+    throw new Error('Strong mode demands requireValidation and no allowUnusedKeywords')
 
   if (!scope) scope = Object.create(null)
   if (!scope[scopeRefCache]) scope[scopeRefCache] = new Map()
@@ -188,7 +190,7 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
     if (typeof node === 'boolean') {
       if (node === true) {
         // any is valid
-        if (strong) throw new Error('[strong mode] schema = true is not allowed')
+        if (requireValidation) throw new Error('[requireValidation] schema = true is not allowed')
       } else {
         // node === false
         fun.write('if (%s !== undefined) {', name)
@@ -200,7 +202,7 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
 
     if (Object.getPrototypeOf(node) !== Object.prototype) throw new Error('Schema is not an object')
     for (const keyword of Object.keys(node))
-      if (!KNOWN_KEYWORDS.includes(keyword) && !lax)
+      if (!KNOWN_KEYWORDS.includes(keyword) && !allowUnusedKeywords)
         throw new Error(`Keyword not supported: ${keyword}`)
 
     const unprocessed = new Set(Object.keys(node))
@@ -213,7 +215,7 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
     const finish = () => {
       while (indent--) fun.write('}')
 
-      if (!lax && unprocessed.size !== 0)
+      if (!allowUnusedKeywords && unprocessed.size !== 0)
         throw new Error(`Unprocessed keywords: ${[...unprocessed].join(', ')}`)
     }
 
@@ -310,7 +312,7 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
     }
 
     const { type } = node
-    if (strong && !type) throw new Error('[strong mode] type is required')
+    if (requireValidation && !type) throw new Error('[requireValidation] type is required')
     if (type !== undefined && typeof type !== 'string' && !Array.isArray(type))
       throw new Error('Unexpected type')
 
@@ -319,7 +321,8 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
       if (typeof t !== 'string' || !types.hasOwnProperty(t)) {
         throw new Error(`Unknown type: ${t}`)
       }
-      if (strong && t === 'any') throw new Error('[strong mode] type = any is not allowed')
+      if (requireValidation && t === 'any')
+        throw new Error('[requireValidation] type = any is not allowed')
     }
 
     const typeValidate = typeArray.map((t) => types[t](name)).join(' || ') || 'true'
@@ -340,8 +343,8 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
 
     if (!Array.isArray(node.items)) {
       // additionalItems is allowed, but ignored per some spec tests in this case!
-      // We do nothing and let it throw except for in lax mode
-      // As a result, this is not allowed by default, only in lax mode
+      // We do nothing and let it throw except for in allowUnusedKeywords mode
+      // As a result, this is not allowed by default, only in allowUnusedKeywords mode
     } else if (node.additionalItems === false) {
       validateTypeApplicable('array')
       if (type !== 'array') fun.write('if (%s) {', types.array(name))
@@ -367,8 +370,8 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
       consume('additionalItems')
     } else if (node.items.length === node.maxItems) {
       // No additional items are possible
-    } else if (strong) {
-      throw new Error('[strong mode] additionalItems rule must be specified for fixed arrays')
+    } else if (requireValidation) {
+      throw new Error('[requireValidation] additionalItems rule must be specified for fixed arrays')
     }
 
     if (node.format && fmts.hasOwnProperty(node.format)) {
@@ -527,7 +530,8 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
       if (type !== 'object') fun.write('}')
       consume('additionalProperties')
     } else if (typeApplicable('object')) {
-      if (strong) throw new Error('[strong mode] additionalProperties rule must be specified')
+      if (requireValidation)
+        throw new Error('[requireValidation] additionalProperties rule must be specified')
     }
 
     if (typeof node.propertyNames === 'object' || typeof node.propertyNames === 'boolean') {
@@ -544,9 +548,9 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
       if (type !== 'object') fun.write('}')
       consume('propertyNames')
     }
-    if (strong) {
+    if (requireValidation) {
       if (typeof node.additionalProperties === 'object' && typeof node.propertyNames !== 'object')
-        throw new Error('[strong mode] wild-card additionalProperties requires propertyNames')
+        throw new Error('[requireValidation] wild-card additionalProperties requires propertyNames')
     }
 
     if (node.not || node.not === false) {
@@ -821,7 +825,7 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
       if (type !== 'array') fun.write('}')
       consume('items')
     } else if (typeApplicable('array')) {
-      if (strong) throw new Error('[strong mode] items rule must be specified')
+      if (requireValidation) throw new Error('[requireValidation] items rule must be specified')
     }
 
     if (node.contains || node.contains === false) {
