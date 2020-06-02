@@ -10,15 +10,6 @@ const genobj = (name, property) => {
   return `${name}[${JSON.stringify(property)}]`
 }
 
-const formatName = function(field) {
-  field = JSON.stringify(field)
-  // Commented out code from original vanilla version because it allows a code execution
-  // exploit from a maliciously crafted schema.
-  // var pattern = /\[([^\[\]"]+)\]/
-  // while (pattern.test(field)) field = field.replace(pattern, '."+$1+"')
-  return field
-}
-
 const types = {}
 types.any = () => 'true'
 types.null = (name) => `${name} === null`
@@ -169,7 +160,7 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
         if (verbose) {
           fun.write(
             'validate.errors.push({field:%s,message:%s,value:%s,type:%s,schemaPath:%s})',
-            formatName(prop || name),
+            JSON.stringify(prop || name),
             JSON.stringify(msg),
             value || name,
             JSON.stringify(node.type || 'any'),
@@ -178,7 +169,7 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
         } else {
           fun.write(
             'validate.errors.push({field:%s,message:%s})',
-            formatName(prop || name),
+            JSON.stringify(prop || name),
             JSON.stringify(msg)
           )
         }
