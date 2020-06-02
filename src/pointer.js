@@ -43,7 +43,10 @@ function joinPath(base, sub) {
   base = base.replace(/#.*/, '')
   if (sub.startsWith('#')) return `${base}${sub}`
   if (!base.includes('/') || sub.replace(/#.*/, '').includes('://')) return sub
-  if (sub.startsWith('/')) throw new Error('Unsupported yet')
+  if (sub.startsWith('/')) {
+    if (base.startsWith('/')) return sub
+    throw new Error('Unsupported yet')
+  }
   return `${base.replace(/\/?[^/]*$/, '')}/${sub}`
 }
 
