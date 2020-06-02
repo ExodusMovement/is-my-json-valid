@@ -178,12 +178,12 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
       throw new Error(`${msg}${comment} at #${toPointer(schemaPath)}`)
     }
     const enforce = (ok, ...args) => ok || fail(...args)
-    const validationRequired = (msg) => enforce(!requireValidation, `[requireValidation] ${msg}`)
+    const enforceValidation = (msg) => enforce(!requireValidation, `[requireValidation] ${msg}`)
 
     if (typeof node === 'boolean') {
       if (node === true) {
         // any is valid
-        validationRequired('schema = true is not allowed')
+        enforceValidation('schema = true is not allowed')
       } else {
         // node === false
         fun.write('if (%s !== undefined) {', name)
@@ -300,14 +300,14 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
     }
 
     const { type } = node
-    if (!type) validationRequired('type is required')
+    if (!type) enforceValidation('type is required')
     if (type !== undefined && typeof type !== 'string' && !Array.isArray(type))
       fail('Unexpected type')
 
     const typeArray = type ? (Array.isArray(type) ? type : [type]) : []
     for (const t of typeArray) {
       enforce(typeof t === 'string' && types.hasOwnProperty(t), 'Unknown type:', t)
-      if (t === 'any') validationRequired('type = any is not allowed')
+      if (t === 'any') enforceValidation('type = any is not allowed')
     }
 
     const typeValidate = typeArray.map((t) => types[t](name)).join(' || ') || 'true'
@@ -354,7 +354,7 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
     } else if (node.items.length === node.maxItems) {
       // No additional items are possible
     } else {
-      validationRequired('additionalItems rule must be specified for fixed arrays')
+      enforceValidation('additionalItems rule must be specified for fixed arrays')
     }
 
     if (node.format && fmts.hasOwnProperty(node.format)) {
@@ -509,7 +509,7 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
       if (type !== 'object') fun.write('}')
       consume('additionalProperties')
     } else if (typeApplicable('object')) {
-      validationRequired('additionalProperties rule must be specified')
+      enforceValidation('additionalProperties rule must be specified')
     }
 
     if (typeof node.propertyNames === 'object' || typeof node.propertyNames === 'boolean') {
@@ -527,7 +527,7 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
       consume('propertyNames')
     }
     if (typeof node.additionalProperties === 'object' && typeof node.propertyNames !== 'object') {
-      validationRequired('wild-card additionalProperties requires propertyNames')
+      enforceValidation('wild-card additionalProperties requires propertyNames')
     }
 
     if (node.not || node.not === false) {
@@ -802,7 +802,7 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
       if (type !== 'array') fun.write('}')
       consume('items')
     } else if (typeApplicable('array')) {
-      validationRequired('items rule must be specified')
+      enforceValidation('items rule must be specified')
     }
 
     if (node.contains || node.contains === false) {
