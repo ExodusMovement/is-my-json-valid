@@ -1,6 +1,6 @@
 const jaystring = require('./jaystring')
 const genfun = require('./generate-function')
-const { resolveReference, joinPath } = require('./pointer')
+const { toPointer, resolveReference, joinPath } = require('./pointer')
 const formats = require('./formats')
 const KNOWN_KEYWORDS = require('./known-keywords')
 
@@ -157,21 +157,17 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
       fun.write('errors++')
       if (reporter === true) {
         fun.write('if (validate.errors === null) validate.errors = []')
+        const errorObject = { field: prop || name, message: msg }
         if (verbose) {
+          const type = node.type || 'any'
+          Object.assign(errorObject, { type, schemaPath: toPointer(schemaPath) })
           fun.write(
-            'validate.errors.push({field:%s,message:%s,value:%s,type:%s,schemaPath:%s})',
-            JSON.stringify(prop || name),
-            JSON.stringify(msg),
-            value || name,
-            JSON.stringify(node.type || 'any'),
-            JSON.stringify(schemaPath)
+            'validate.errors.push({ ...%s, value: %s })',
+            JSON.stringify(errorObject),
+            value || name
           )
         } else {
-          fun.write(
-            'validate.errors.push({field:%s,message:%s})',
-            JSON.stringify(prop || name),
-            JSON.stringify(msg)
-          )
+          fun.write('validate.errors.push(%s)', JSON.stringify(errorObject))
         }
       }
       if (!allErrors) fun.write('return false')
@@ -179,7 +175,7 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
 
     const fail = (msg, value) => {
       const comment = value !== undefined ? ` ${JSON.stringify(value)}` : ''
-      throw new Error(`${msg}${comment} at #/${schemaPath.join('/')}`)
+      throw new Error(`${msg}${comment} at #${toPointer(schemaPath)}`)
     }
     const enforce = (ok, ...args) => ok || fail(...args)
     const validationRequired = (msg) => enforce(!requireValidation, `[requireValidation] ${msg}`)
