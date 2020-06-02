@@ -21,7 +21,7 @@ types.integer = (name) =>
   `typeof ${name} === "number" && (Math.floor(${name}) === ${name} || ${name} > 9007199254740992 || ${name} < -9007199254740992)`
 types.string = (name) => `typeof ${name} === "string"`
 
-const unique = function(array) {
+const unique = (array) => {
   const list = []
   for (let i = 0; i < array.length; i++) {
     list.push(typeof array[i] === 'object' ? JSON.stringify(array[i]) : array[i])
@@ -32,7 +32,7 @@ const unique = function(array) {
   return true
 }
 
-const isMultipleOf = function(value, multipleOf) {
+const isMultipleOf = (value, multipleOf) => {
   if (typeof multipleOf !== 'number' || !Number.isFinite(value))
     throw new Error('multipleOf is not a number')
   if (typeof value !== 'number' || !Number.isFinite(value)) return false
@@ -93,7 +93,7 @@ const schemaVersions = [
 ]
 
 const rootMeta = new WeakMap()
-const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
+const compile = (schema, root, reporter, opts, scope, basePathRoot) => {
   const {
     mode = 'default',
     verbose = false,
@@ -130,7 +130,7 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
   }
 
   const reversePatterns = {}
-  const patterns = function(p) {
+  const patterns = (p) => {
     if (reversePatterns[p]) return reversePatterns[p]
     const n = gensym('pattern')
     scope[n] = new RegExp(p, 'u')
@@ -139,7 +139,7 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
   }
 
   const vars = 'ijklmnopqrstuvxyz'.split('')
-  const genloop = function() {
+  const genloop = () => {
     const v = vars.shift()
     vars.push(v + v[0])
     return v
@@ -156,7 +156,7 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
   const visit = (allErrors, reporter, name, node, schemaPath) => {
     const rule = (...args) => visit(allErrors, reporter, ...args)
     const subrule = (...args) => visit(true, false, ...args)
-    const error = function(msg, prop, value) {
+    const error = (msg, prop, value) => {
       fun.write('errors++')
       if (reporter === true) {
         fun.write('if (validate.errors === null) validate.errors = []')
@@ -383,7 +383,7 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
     if (Array.isArray(node.required)) {
       validateTypeApplicable('object')
       const missing = gensym('missing')
-      const checkRequired = function(req) {
+      const checkRequired = (req) => {
         const prop = genobj(name, req)
         fun.write('if (%s === undefined) {', prop)
         error('is required', prop)
@@ -471,13 +471,8 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
       const i = genloop()
       const keys = gensym('keys')
 
-      const toCompare = function(p) {
-        return `${keys}[${i}] !== ${JSON.stringify(p)}`
-      }
-
-      const toTest = function(p) {
-        return `!${patterns(p)}.test(${keys}[${i}])`
-      }
+      const toCompare = (p) => `${keys}[${i}] !== ${JSON.stringify(p)}`
+      const toTest = (p) => `!${patterns(p)}.test(${keys}[${i}])`
 
       const additionalProp =
         Object.keys(node.properties || {})
@@ -591,7 +586,7 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
 
     if (node.allOf) {
       enforce(Array.isArray(node.allOf), 'Invalid allOf')
-      node.allOf.forEach(function(sch, key) {
+      node.allOf.forEach((sch, key) => {
         rule(name, sch, subPath('allOf', key))
       })
       consume('allOf')
@@ -601,7 +596,7 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
       enforce(Array.isArray(node.anyOf), 'Invalid anyOf')
       const prev = gensym('prev')
 
-      node.anyOf.forEach(function(sch, i) {
+      node.anyOf.forEach((sch, i) => {
         if (i === 0) {
           fun.write('var %s = errors', prev)
         } else {
@@ -610,7 +605,7 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
         }
         subrule(name, sch, schemaPath)
       })
-      node.anyOf.forEach(function(sch, i) {
+      node.anyOf.forEach((sch, i) => {
         if (i) fun.write('}')
       })
       fun.write('if (%s !== errors) {', prev)
