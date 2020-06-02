@@ -325,6 +325,10 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
     const validateTypeApplicable = (...types) =>
       enforce(typeApplicable(...types), 'Unexpected field in type', type)
 
+    // All checks below should be independent
+    const fixedIndent = indent
+    const checkDepth = () => enforce(fixedIndent === indent, '[internal] Failed depth safeguard')
+
     if (!Array.isArray(node.items)) {
       // additionalItems is allowed, but ignored per some spec tests in this case!
       // We do nothing and let it throw except for in allowUnusedKeywords mode
@@ -358,6 +362,8 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
       enforceValidation('additionalItems rule must be specified for fixed arrays')
     }
 
+    checkDepth()
+
     if (node.format && fmts.hasOwnProperty(node.format)) {
       validateTypeApplicable('string')
       if (type !== 'string' && formats[node.format]) fun.write('if (%s) {', types.string(name))
@@ -383,6 +389,8 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
       enforce(!node.format, 'Unrecognized format used:', node.format)
     }
 
+    checkDepth()
+
     if (Array.isArray(node.required)) {
       validateTypeApplicable('object')
       const missing = gensym('missing')
@@ -400,6 +408,8 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
       consume('required')
     }
 
+    checkDepth()
+
     if (node.uniqueItems === true) {
       validateTypeApplicable('array')
       if (type !== 'array') fun.write('if (%s) {', types.array(name))
@@ -412,6 +422,8 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
     } else if (node.uniqueItems === false) {
       consume('uniqueItems')
     }
+
+    checkDepth()
 
     const makeCompare = (name, complex) => {
       if (complex) {
@@ -437,6 +449,8 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
       fun.write('}')
       consume('enum')
     }
+
+    checkDepth()
 
     if (node.dependencies) {
       validateTypeApplicable('object')
@@ -466,6 +480,8 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
       if (type !== 'object') fun.write('}')
       consume('dependencies')
     }
+
+    checkDepth()
 
     if (node.additionalProperties || node.additionalProperties === false) {
       validateTypeApplicable('object')
@@ -513,6 +529,8 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
       enforceValidation('additionalProperties rule must be specified')
     }
 
+    checkDepth()
+
     if (typeof node.propertyNames === 'object' || typeof node.propertyNames === 'boolean') {
       validateTypeApplicable('object')
       if (type !== 'object') fun.write('if (%s) {', types.object(name))
@@ -531,6 +549,8 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
       enforceValidation('wild-card additionalProperties requires propertyNames')
     }
 
+    checkDepth()
+
     if (node.not || node.not === false) {
       const prev = gensym('prev')
       fun.write('var %s = errors', prev)
@@ -542,6 +562,8 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
       fun.write('}')
       consume('not')
     }
+
+    checkDepth()
 
     const thenOrElse = node.then || node.then === false || node.else || node.else === false
     if ((node.if || node.if === false) && thenOrElse) {
@@ -562,6 +584,8 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
       fun.write('}')
       consume('if')
     }
+
+    checkDepth()
 
     if (node.patternProperties) {
       validateTypeApplicable('object')
@@ -589,6 +613,8 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
       consume('patternProperties')
     }
 
+    checkDepth()
+
     if (node.pattern) {
       const p = patterns(node.pattern)
       validateTypeApplicable('string')
@@ -600,6 +626,8 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
       consume('pattern')
     }
 
+    checkDepth()
+
     if (node.allOf) {
       enforce(Array.isArray(node.allOf), 'Invalid allOf')
       node.allOf.forEach(function(sch, key) {
@@ -607,6 +635,8 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
       })
       consume('allOf')
     }
+
+    checkDepth()
 
     if (node.anyOf && node.anyOf.length) {
       enforce(Array.isArray(node.anyOf), 'Invalid anyOf')
@@ -629,6 +659,8 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
       fun.write('}')
       consume('anyOf')
     }
+
+    checkDepth()
 
     if (node.oneOf && node.oneOf.length) {
       enforce(Array.isArray(node.oneOf), 'Invalid oneOf')
@@ -653,6 +685,8 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
       consume('oneOf')
     }
 
+    checkDepth()
+
     const multipleOf = node.multipleOf === undefined ? 'divisibleBy' : 'multipleOf' // draft3 support
     if (node[multipleOf] !== undefined) {
       enforce(Number.isFinite(node[multipleOf]), `Invalid ${multipleOf}:`, node[multipleOf])
@@ -669,6 +703,8 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
       consume(multipleOf)
     }
 
+    checkDepth()
+
     if (node.maxProperties !== undefined) {
       enforce(Number.isFinite(node.maxProperties), 'Invalid maxProperties:', node.maxProperties)
       validateTypeApplicable('object')
@@ -682,6 +718,8 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
       consume('maxProperties')
     }
 
+    checkDepth()
+
     if (node.minProperties !== undefined) {
       enforce(Number.isFinite(node.minProperties), 'Invalid minProperties:', node.minProperties)
       validateTypeApplicable('object')
@@ -694,6 +732,8 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
       if (type !== 'object') fun.write('}')
       consume('minProperties')
     }
+
+    checkDepth()
 
     if (node.maxItems !== undefined) {
       enforce(Number.isFinite(node.maxItems), 'Invalid maxItems:', node.maxItems)
@@ -710,6 +750,8 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
       consume('maxItems')
     }
 
+    checkDepth()
+
     if (node.minItems !== undefined) {
       enforce(Number.isFinite(node.minItems), 'Invalid minItems:', node.minItems)
       // can be higher that .items length with additionalItems
@@ -723,6 +765,8 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
       if (type !== 'array') fun.write('}')
       consume('minItems')
     }
+
+    checkDepth()
 
     if (node.maxLength !== undefined) {
       enforce(Number.isFinite(node.maxLength), 'Invalid maxLength:', node.maxLength)
@@ -738,6 +782,8 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
       consume('maxLength')
     }
 
+    checkDepth()
+
     if (node.minLength !== undefined) {
       enforce(Number.isFinite(node.minLength), 'Invalid minLength:', node.minLength)
       validateTypeApplicable('string')
@@ -752,6 +798,8 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
       consume('minLength')
     }
 
+    checkDepth()
+
     const applyMinMax = (value, operator, message) => {
       enforce(Number.isFinite(value), 'Invalid minimum or maximum:', value)
       validateTypeApplicable('number', 'integer')
@@ -764,6 +812,8 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
       if (type !== 'number' && type !== 'integer') fun.write('}')
     }
 
+    checkDepth()
+
     if (Number.isFinite(node.exclusiveMinimum)) {
       applyMinMax(node.exclusiveMinimum, '<=', 'is less than exclusiveMinimum')
       consume('exclusiveMinimum')
@@ -773,6 +823,8 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
       if (typeof node.exclusiveMinimum === 'boolean') consume('exclusiveMinimum')
     }
 
+    checkDepth()
+
     if (Number.isFinite(node.exclusiveMaximum)) {
       applyMinMax(node.exclusiveMaximum, '>=', 'is more than exclusiveMaximum')
       consume('exclusiveMaximum')
@@ -781,6 +833,8 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
       consume('maximum')
       if (typeof node.exclusiveMaximum === 'boolean') consume('exclusiveMaximum')
     }
+
+    checkDepth()
 
     if (node.items || node.items === false) {
       validateTypeApplicable('array')
@@ -805,6 +859,8 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
     } else if (typeApplicable('array')) {
       enforceValidation('items rule must be specified')
     }
+
+    checkDepth()
 
     if (node.contains || node.contains === false) {
       validateTypeApplicable('array')
@@ -847,6 +903,8 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
       consume('contains')
     }
 
+    checkDepth()
+
     if (typeof node.properties === 'object') {
       validateTypeApplicable('object')
       for (const p of Object.keys(node.properties)) {
@@ -865,6 +923,8 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
       }
       consume('properties')
     }
+
+    checkDepth()
 
     finish()
   }
