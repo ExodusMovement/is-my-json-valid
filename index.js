@@ -109,6 +109,7 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
     greedy = false,
     applyDefault = false,
     allErrors: optAllErrors = false,
+    dryRun = false,
     $schemaDefault = null,
     formats: optFormats = {},
     schemas = {},
@@ -890,6 +891,8 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
 
   fun.write('return errors === 0')
   fun.write('}')
+
+  if (dryRun) return
 
   const validate = fun.makeFunction(scope)
   validate.toModule = () => fun.makeModule(scope)
