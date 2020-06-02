@@ -812,7 +812,7 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
       const i = genloop()
       fun.write('for (let %s = 0; %s < %s.length; %s++) {', i, i, name, i)
       fun.write('const %s = errors', prev)
-      visit(true, `${name}[${i}]`, node.contains, reporter, subPath('contains'))
+      visit(true, `${name}[${i}]`, node.contains, false, subPath('contains'))
       fun.write('if (%s === errors) {', prev)
       fun.write('%s++', passes)
       fun.write('} else {')
