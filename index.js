@@ -180,6 +180,7 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
     }
     const enforce = (ok, ...args) => ok || fail(...args)
     const enforceValidation = (msg) => enforce(!requireValidation, `[requireValidation] ${msg}`)
+    const subPath = (...args) => [...schemaPath, ...args]
 
     if (typeof node === 'boolean') {
       if (node === true) {
@@ -342,13 +343,7 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
       if (type !== 'array') fun.write('if (%s) {', types.array(name))
       const i = genloop()
       fun.write('for (var %s = %d; %s < %s.length; %s++) {', i, node.items.length, i, name, i)
-      visit(
-        allErrors,
-        `${name}[${i}]`,
-        node.additionalItems,
-        reporter,
-        schemaPath.concat('additionalItems')
-      )
+      visit(allErrors, `${name}[${i}]`, node.additionalItems, reporter, subPath('additionalItems'))
       fun.write('}')
       if (type !== 'array') fun.write('}')
       consume('additionalItems')
@@ -374,7 +369,7 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
         error(`must be ${node.format} format`)
         fun.write('}')
       } else if (typeof format === 'object') {
-        visit(allErrors, name, format, reporter, schemaPath.concat('format'))
+        visit(allErrors, name, format, reporter, subPath('format'))
       }
 
       if (type !== 'string' && formats[node.format]) fun.write('}')
@@ -456,7 +451,7 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
           fun.write('}')
         } else if (typeof deps === 'object' || typeof deps === 'boolean') {
           fun.write('if (%s !== undefined) {', item)
-          visit(allErrors, name, deps, reporter, schemaPath.concat(['dependencies', key]))
+          visit(allErrors, name, deps, reporter, subPath('dependencies', key))
           fun.write('}')
         } else {
           fail('Unexpected dependencies entry')
@@ -500,7 +495,7 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
           `${name}[${keys}[${i}]]`,
           node.additionalProperties,
           reporter,
-          schemaPath.concat(['additionalProperties'])
+          subPath('additionalProperties')
         )
       }
 
@@ -522,7 +517,7 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
         typeof node.propertyNames === 'object'
           ? { type: 'string', ...node.propertyNames }
           : node.propertyNames
-      visit(allErrors, key, nameSchema, reporter, schemaPath.concat(['propertyNames']))
+      visit(allErrors, key, nameSchema, reporter, subPath('propertyNames'))
       fun.write('}')
       if (type !== 'object') fun.write('}')
       consume('propertyNames')
@@ -534,7 +529,7 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
     if (node.not || node.not === false) {
       const prev = gensym('prev')
       fun.write('var %s = errors', prev)
-      visit(true, name, node.not, false, schemaPath.concat('not'))
+      visit(true, name, node.not, false, subPath('not'))
       fun.write('if (%s === errors) {', prev)
       error('negative schema matches')
       fun.write('} else {')
@@ -547,16 +542,16 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
     if ((node.if || node.if === false) && thenOrElse) {
       const prev = gensym('prev')
       fun.write('const %s = errors', prev)
-      visit(true, name, node.if, false, schemaPath.concat('if'))
+      visit(true, name, node.if, false, subPath('if'))
       fun.write('if (%s !== errors) {', prev)
       fun.write('errors = %s', prev)
       if (node.else || node.else === false) {
-        visit(allErrors, name, node.else, reporter, schemaPath.concat('else'))
+        visit(allErrors, name, node.else, reporter, subPath('else'))
         consume('else')
       }
       if (node.then || node.then === false) {
         fun.write('} else {')
-        visit(allErrors, name, node.then, reporter, schemaPath.concat('then'))
+        visit(allErrors, name, node.then, reporter, subPath('then'))
         consume('then')
       }
       fun.write('}')
@@ -579,7 +574,7 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
           `${name}[${keys}[${i}]]`,
           node.patternProperties[key],
           reporter,
-          schemaPath.concat(['patternProperties', key])
+          subPath('patternProperties', key)
         )
         fun.write('}')
       }
@@ -603,7 +598,7 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
     if (node.allOf) {
       enforce(Array.isArray(node.allOf), 'Invalid allOf')
       node.allOf.forEach(function(sch, key) {
-        visit(allErrors, name, sch, reporter, schemaPath.concat(['allOf', key]))
+        visit(allErrors, name, sch, reporter, subPath('allOf', key))
       })
       consume('allOf')
     }
@@ -790,13 +785,13 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
         for (let p = 0; p < node.items.length; p++) {
           if (Array.isArray(type) && type.indexOf('null') !== -1)
             fun.write('if (%s !== null) {', name)
-          visit(allErrors, genobj(name, p), node.items[p], reporter, schemaPath.concat(`${p}`))
+          visit(allErrors, genobj(name, p), node.items[p], reporter, subPath(`${p}`))
           if (Array.isArray(type) && type.indexOf('null') !== -1) fun.write('}')
         }
       } else {
         const i = genloop()
         fun.write('for (var %s = 0; %s < %s.length; %s++) {', i, i, name, i)
-        visit(allErrors, `${name}[${i}]`, node.items, reporter, schemaPath.concat('items'))
+        visit(allErrors, `${name}[${i}]`, node.items, reporter, subPath('items'))
         fun.write('}')
       }
 
@@ -817,7 +812,7 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
       const i = genloop()
       fun.write('for (let %s = 0; %s < %s.length; %s++) {', i, i, name, i)
       fun.write('const %s = errors', prev)
-      visit(true, `${name}[${i}]`, node.contains, reporter, schemaPath.concat('contains'))
+      visit(true, `${name}[${i}]`, node.contains, reporter, subPath('contains'))
       fun.write('if (%s === errors) {', prev)
       fun.write('%s++', passes)
       fun.write('} else {')
@@ -853,13 +848,7 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
         if (Array.isArray(type) && type.indexOf('null') !== -1)
           fun.write('if (%s !== null) {', name)
 
-        visit(
-          allErrors,
-          genobj(name, p),
-          node.properties[p],
-          reporter,
-          schemaPath.concat(['properties', p])
-        )
+        visit(allErrors, genobj(name, p), node.properties[p], reporter, subPath('properties', p))
 
         if (Array.isArray(type) && type.indexOf('null') !== -1) fun.write('}')
       }
