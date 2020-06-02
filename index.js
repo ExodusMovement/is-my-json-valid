@@ -103,15 +103,23 @@ const schemaVersions = [
 
 const rootMeta = new WeakMap()
 const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
-  const fmts = Object.assign({}, formats, opts.formats)
-  const verbose = !!opts.verbose
-  const greedy = !!opts.greedy
-  if (opts.filter) throw new Error('Filtering is not supported')
+  const {
+    mode = 'default',
+    verbose = false,
+    greedy = false,
+    applyDefault = false,
+    allErrors: optAllErrors = false,
+    $schemaDefault = null,
+    formats: optFormats = {},
+    schemas = {},
+    ...unknown
+  } = opts
+  const fmts = Object.assign({}, formats, optFormats)
+  if (unknown.length > 0) throw new Error(`Unknown options: ${Object.keys(unknown).join(', ')}`)
 
-  if (opts.mode && !['strong', 'lax', 'default'].includes(opts.mode))
-    throw new Error(`Invalid mode: ${opts.mode}`)
-  const strong = opts.mode === 'strong'
-  const lax = opts.mode === 'lax'
+  if (!['strong', 'lax', 'default'].includes(mode)) throw new Error(`Invalid mode: ${mode}`)
+  const strong = mode === 'strong'
+  const lax = mode === 'lax'
 
   if (!scope) scope = Object.create(null)
   if (!scope[scopeRefCache]) scope[scopeRefCache] = new Map()
@@ -213,8 +221,8 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
       if (typeof node.$schema === 'string') {
         consume('$schema')
         version = node.$schema
-      } else if (opts.$schemaDefault) {
-        version = opts.$schemaDefault
+      } else if ($schemaDefault) {
+        version = $schemaDefault
       }
       if (version) {
         if (!schemaVersions.includes(version)) throw new Error('Unexpected schema version')
@@ -251,7 +259,7 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
     let indent = 0
 
     if (node.default !== undefined) {
-      if (opts.applyDefault) {
+      if (applyDefault) {
         indent++
         fun.write('if (%s === undefined) {', name)
         fun.write('%s = %s', name, jaystring(node.default))
@@ -273,7 +281,7 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
     }
 
     if (node.$ref) {
-      const resolved = resolveReference(root, opts.schemas || {}, joinPath(basePath(), node.$ref))
+      const resolved = resolveReference(root, schemas || {}, joinPath(basePath(), node.$ref))
       const [sub, subRoot, path] = resolved[0] || []
       if (sub || sub === false) {
         let n = refCache.get(sub)
@@ -878,7 +886,7 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
     finish()
   }
 
-  visit(!!opts.allErrors, 'data', schema, reporter, [])
+  visit(optAllErrors, 'data', schema, reporter, [])
 
   fun.write('return errors === 0')
   fun.write('}')
