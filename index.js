@@ -252,7 +252,7 @@ const compile = (schema, root, reporter, opts, scope, basePathRoot) => {
 
     fun.write('if (%s === undefined) {', name)
     let defaultApplied = false
-    if (node.default !== undefined && node !== root && name !== 'data') {
+    if (node.default !== undefined) {
       if (applyDefault) {
         if (node === root || name === 'data') fail('Can not apply default value at root')
         fun.write('%s = %s', name, jaystring(node.default))
