@@ -251,7 +251,7 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
     let indent = 1
     fun.write('if (%s === undefined) {', name)
     let defaultApplied = false
-    if (node.default !== undefined) {
+    if (node.default !== undefined && node !== root && name !== 'data') {
       if (applyDefault) {
         fun.write('%s = %s', name, jaystring(node.default))
         defaultApplied = true
