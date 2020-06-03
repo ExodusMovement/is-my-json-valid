@@ -205,7 +205,6 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
     }
 
     const finish = () => {
-      while (indent--) fun.write('}')
       enforce(unused.size === 0 || allowUnusedKeywords, 'Unprocessed keywords:', [...unused])
     }
 
@@ -248,7 +247,6 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
       consume('id')
     }
 
-    let indent = 1
     fun.write('if (%s === undefined) {', name)
     let defaultApplied = false
     if (node.default !== undefined && node !== root && name !== 'data') {
@@ -289,6 +287,7 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
 
       if (rootMeta.has(root) && rootMeta.get(root).exclusiveRefs) {
         // ref overrides any sibling keywords for older schemas
+        fun.write('}') // undefined check
         finish()
         return
       }
@@ -306,13 +305,16 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
     }
 
     const typeValidate = typeArray.map((t) => types[t](name)).join(' || ') || 'true'
-    if (typeValidate !== 'true') {
-      indent++
+    if (typeValidate === 'true') {
+      fun.write('/* any type */ {') // make missing type check visible in source code
+    } else {
       fun.write('if (!(%s)) {', typeValidate)
       error('is the wrong type')
       fun.write('} else {')
     }
     if (type) consume('type')
+
+    /* All checks below are expected to be independent, they are happening on the same code depth */
 
     const typeApplicable = (...types) =>
       !type || typeArray.includes('any') || typeArray.some((x) => types.includes(x))
@@ -860,6 +862,8 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
       consume('properties')
     }
 
+    fun.write('}') // type check
+    fun.write('}') // undefined check
     finish()
   }
 
