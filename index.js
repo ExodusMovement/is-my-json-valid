@@ -248,29 +248,23 @@ const compile = function(schema, root, reporter, opts, scope, basePathRoot) {
       consume('id')
     }
 
-    let indent = 0
-
+    let indent = 1
+    fun.write('if (%s === undefined) {', name)
+    let defaultApplied = false
     if (node.default !== undefined) {
       if (applyDefault) {
-        indent++
-        fun.write('if (%s === undefined) {', name)
         fun.write('%s = %s', name, jaystring(node.default))
-        fun.write('} else {')
+        defaultApplied = true
       }
       consume('default')
     }
-
     if (node.required === true) {
-      indent++
-      fun.write('if (%s === undefined) {', name)
-      error('is required')
-      fun.write('} else {')
+      if (!defaultApplied) error('is required')
       consume('required')
-    } else {
-      indent++
-      fun.write('if (%s !== undefined) {', name)
-      if (node.required === false) consume('required')
+    } else if (node.required === false) {
+      consume('required')
     }
+    fun.write('} else {')
 
     if (node.$ref) {
       const resolved = resolveReference(root, schemas || {}, joinPath(basePath(), node.$ref))
