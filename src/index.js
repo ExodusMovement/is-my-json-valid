@@ -104,7 +104,7 @@ const compile = (schema, root, opts, scope, basePathRoot) => {
     mode = 'default',
     verbose = false,
     applyDefault = false,
-    includeErrors: optIncludeErrors = true,
+    includeErrors: optIncludeErrors = false,
     allErrors: optAllErrors = false,
     dryRun = false,
     allowUnusedKeywords = opts.mode === 'lax',
