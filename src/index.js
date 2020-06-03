@@ -102,10 +102,10 @@ const rootMeta = new WeakMap()
 const compile = (schema, root, opts, scope, basePathRoot) => {
   const {
     mode = 'default',
-    verbose = false,
     applyDefault = false,
     includeErrors: optIncludeErrors = false,
     allErrors: optAllErrors = false,
+    verboseErrors = false,
     dryRun = false,
     allowUnusedKeywords = opts.mode === 'lax',
     requireValidation = opts.mode === 'strong',
@@ -176,7 +176,7 @@ const compile = (schema, root, opts, scope, basePathRoot) => {
       fun.write('errors++')
       if (includeErrors === true) {
         const errorObject = { field: prop || name, message: msg }
-        if (verbose) {
+        if (verboseErrors) {
           const type = node.type || 'any'
           Object.assign(errorObject, { type, schemaPath: toPointer(schemaPath) })
           writeError('{ ...%s, value: %s }', JSON.stringify(errorObject), value || name)

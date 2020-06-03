@@ -104,7 +104,7 @@ tape('additional props', function(t) {
     },
     {
       includeErrors: true,
-      verbose: true,
+      verboseErrors: true,
     }
   )
 
@@ -416,7 +416,7 @@ tape('verbose mode', function(t) {
     },
   }
 
-  const validate = validator(schema, { includeErrors: true, verbose: true })
+  const validate = validator(schema, { includeErrors: true, verboseErrors: true })
 
   t.ok(validate({ hello: 'string' }), 'should be valid')
   t.notOk(validate({ hello: 100 }), 'should not be valid')
@@ -447,7 +447,7 @@ tape('additional props in verbose mode', function(t) {
     },
   }
 
-  const validate = validator(schema, { includeErrors: true, verbose: true })
+  const validate = validator(schema, { includeErrors: true, verboseErrors: true })
 
   validate({ 'hello world': { bar: 'string' } })
 
