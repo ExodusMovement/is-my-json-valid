@@ -163,7 +163,7 @@ const compile = (schema, root, opts, scope, basePathRoot) => {
   const visit = (allErrors, includeErrors, name, node, schemaPath) => {
     const rule = (...args) => visit(allErrors, includeErrors, ...args)
     const subrule = (...args) => visit(true, false, ...args)
-    const writeError = (format, ...params) => {
+    const writeErrorObject = (format, ...params) => {
       if (allErrors) {
         fun.write('if (validate.errors === null) validate.errors = []')
         fun.write(`validate.errors.push(${format})`, ...params)
@@ -179,9 +179,9 @@ const compile = (schema, root, opts, scope, basePathRoot) => {
         if (verboseErrors) {
           const type = node.type || 'any'
           Object.assign(errorObject, { type, schemaPath: toPointer(schemaPath) })
-          writeError('{ ...%s, value: %s }', JSON.stringify(errorObject), value || name)
+          writeErrorObject('{ ...%s, value: %s }', JSON.stringify(errorObject), value || name)
         } else {
-          writeError('%s', JSON.stringify(errorObject))
+          writeErrorObject('%s', JSON.stringify(errorObject))
         }
       }
       if (!allErrors) fun.write('return false')
