@@ -168,6 +168,7 @@ const compile = (schema, root, opts, scope, basePathRoot) => {
         fun.write('if (validate.errors === null) validate.errors = []')
         fun.write(`validate.errors.push(${format})`, ...params)
       } else {
+        // Array assignment is significantly faster, do not refactor the two branches
         fun.write(`validate.errors = [${format}]`, ...params)
         fun.write('return false')
       }
