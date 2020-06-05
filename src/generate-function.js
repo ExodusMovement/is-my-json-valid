@@ -21,7 +21,7 @@ module.exports = () => {
   return {
     write(fmt, ...args) {
       if (typeof fmt !== 'string') throw new Error('Format must be a string!')
-      if (args.length === 1 && fmt.indexOf('\n') > -1) {
+      if (args.length === 0 && fmt.indexOf('\n') > -1) {
         // multiple lines with no parameters, push them separately for correct indent
         const lines = fmt.trim().split('\n')
         for (const line of lines) {
