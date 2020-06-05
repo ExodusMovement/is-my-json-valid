@@ -159,7 +159,7 @@ const compile = (schema, root, opts, scope, basePathRoot) => {
   if (optIncludeErrors) fun.write('validate.errors = null')
   fun.write('let errors = 0')
 
-  const getMeta = (flag) => rootMeta.get(root) || {}
+  const getMeta = () => rootMeta.get(root) || {}
   const basePathStack = basePathRoot ? [basePathRoot] : []
   const visit = (allErrors, includeErrors, name, node, schemaPath) => {
     const rule = (...args) => visit(allErrors, includeErrors, ...args)
