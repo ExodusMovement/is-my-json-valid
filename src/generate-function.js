@@ -25,6 +25,10 @@ module.exports = () => {
       pushLine(args.length > 0 ? utilFormat(fmt, ...args) : fmt)
     },
 
+    size() {
+      return lines.length
+    },
+
     block(fmt, args, close, writeBody) {
       const oldIndent = indent
       this.write(fmt, ...args)
