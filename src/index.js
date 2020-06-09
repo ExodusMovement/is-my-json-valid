@@ -721,8 +721,8 @@ const compile = (schema, root, opts, scope, basePathRoot) => {
     }
     if (type) consume('type')
 
-    // if type validation was needed, we should wrap this inside an else clause
-    // no need to close, type validation would always close at the end if it's used
+    // If type validation was needed, we should wrap this inside an else clause.
+    // No need to close, type validation would always close at the end if it's used.
     maybeWrap(typeValidate !== 'true', '} else {', [], '', () => {
       typeWrap(checkNumbers, ['number', 'integer'], types.number(name))
       typeWrap(checkStrings, ['string'], types.string(name))
