@@ -4,7 +4,7 @@ const INDENT_START = /[{[]/
 const INDENT_END = /[}\]]/
 
 const format = (fmt, ...args) => {
-  const res = fmt.replace(/%[%dsj]/g, (match) => {
+  const res = fmt.replace(/%[%dscj]/g, (match) => {
     if (match === '%%') return '%'
     if (args.length === 0) throw new Error('Unexpected arguments count')
     const val = args.shift()
@@ -15,6 +15,9 @@ const format = (fmt, ...args) => {
       case '%s':
         if (typeof val === 'string') return val
         throw new Error('Expected a string')
+      case '%c':
+        if (['<', '>', '<=', '>='].includes(val)) return val
+        throw new Error('Expected a compare op')
       case '%j':
         return JSON.stringify(val)
     }
