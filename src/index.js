@@ -447,12 +447,8 @@ const compile = (schema, root, opts, scope, basePathRoot) => {
         if (type !== 'array') fun.write('if (%s) {', types.array(name))
 
         if (Array.isArray(node.items)) {
-          for (let p = 0; p < node.items.length; p++) {
-            if (Array.isArray(type) && type.indexOf('null') !== -1)
-              fun.write('if (%s !== null) {', name)
+          for (let p = 0; p < node.items.length; p++)
             rule(genobj(name, p), node.items[p], subPath(`${p}`))
-            if (Array.isArray(type) && type.indexOf('null') !== -1) fun.write('}')
-          }
         } else {
           const i = genloop()
           fun.write('for (let %s = 0; %s < %s.length; %s++) {', i, i, name, i)
