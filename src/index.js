@@ -643,10 +643,8 @@ const compile = (schema, root, opts, scope, basePathRoot) => {
         enforce(Array.isArray(node.oneOf), 'Invalid oneOf')
         const prev = gensym('prev')
         const passes = gensym('passes')
-
         fun.write('const %s = errors', prev)
         fun.write('let %s = 0', passes)
-
         for (const sch of node.oneOf) {
           subrule(name, sch, schemaPath)
           fun.write('if (%s === errors) {', prev)
@@ -655,10 +653,7 @@ const compile = (schema, root, opts, scope, basePathRoot) => {
           fun.write('errors = %s', prev)
           fun.write('}')
         }
-
-        fun.write('if (%s !== 1) {', passes)
-        error('no (or more than one) schemas match')
-        fun.write('}')
+        errorIf('%s !== 1', [passes], 'no (or more than one) schemas match')
         consume('oneOf')
       }
     }
