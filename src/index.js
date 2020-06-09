@@ -253,7 +253,7 @@ const compile = (schema, root, opts, scope, basePathRoot) => {
           fn = compile(sub, subRoot, { ...opts, includeErrors: false }, scope, path)
           scope[n] = fn
         }
-        errorIf('!(%s(%s))', [n, name], 'referenced schema does not match')
+        errorIf('!%s(%s)', [n, name], 'referenced schema does not match')
       } else {
         fail('failed to resolve $ref:', node.$ref)
       }
@@ -367,7 +367,7 @@ const compile = (schema, root, opts, scope, basePathRoot) => {
 
       if (node.pattern) {
         const p = patterns(node.pattern)
-        errorIf('!(%s.test(%s))', [p, name], 'pattern mismatch')
+        errorIf('!%s.test(%s)', [p, name], 'pattern mismatch')
         consume('pattern')
       }
     }
@@ -457,7 +457,7 @@ const compile = (schema, root, opts, scope, basePathRoot) => {
       if (node.uniqueItems === true) {
         scope.unique = functions.unique
         scope.deepEqual = functions.deepEqual
-        errorIf('!(unique(%s))', [name], 'must be unique')
+        errorIf('!unique(%s)', [name], 'must be unique')
         consume('uniqueItems')
       } else if (node.uniqueItems === false) {
         consume('uniqueItems')
