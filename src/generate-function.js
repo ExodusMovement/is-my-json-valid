@@ -19,6 +19,7 @@ const format = (fmt, ...args) => {
         if (['<', '>', '<=', '>='].includes(val)) return val
         throw new Error('Expected a compare op')
       case '%j':
+        if ([Infinity, -Infinity, NaN, undefined].includes(val)) return `${val}`
         return JSON.stringify(val)
     }
     throw new Error(`Unreachable`)

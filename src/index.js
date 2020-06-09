@@ -1,4 +1,3 @@
-const jaystring = require('./jaystring')
 const genfun = require('./generate-function')
 const { toPointer, resolveReference, joinPath } = require('./pointer')
 const formats = require('./formats')
@@ -219,7 +218,7 @@ const compile = (schema, root, opts, scope, basePathRoot) => {
     } else if (defaultIsPresent || booleanRequired) {
       fun.write('if (%s === undefined) {', name)
       if (defaultIsPresent) {
-        fun.write('%s = %s', name, jaystring(node.default))
+        fun.write('%s = %j', name, node.default)
         consume('default')
       }
       if (booleanRequired) {
