@@ -116,9 +116,9 @@ const compile = (schema, root, opts, scope, basePathRoot) => {
         if (verboseErrors) {
           const type = node.type || 'any'
           Object.assign(errorObject, { type, schemaPath: toPointer(schemaPath) })
-          writeErrorObject('{ ...%s, value: %s }', JSON.stringify(errorObject), value || name)
+          writeErrorObject('{ ...%j, value: %s }', errorObject, value || name)
         } else {
-          writeErrorObject('%s', JSON.stringify(errorObject))
+          writeErrorObject('%j', errorObject)
         }
       }
       if (allErrors) {
