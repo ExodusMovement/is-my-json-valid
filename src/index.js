@@ -509,10 +509,8 @@ const compile = (schema, root, opts, scope, basePathRoot) => {
       if (typeof node.propertyNames === 'object' || typeof node.propertyNames === 'boolean') {
         const key = gensym('key')
         fun.block('for (const %s of Object.keys(%s)) {', [key, name], '}', () => {
-          const nameSchema =
-            typeof node.propertyNames === 'object'
-              ? { type: 'string', ...node.propertyNames }
-              : node.propertyNames
+          const names = node.propertyNames
+          const nameSchema = typeof names === 'object' ? { type: 'string', ...names } : names
           rule(key, nameSchema, subPath('propertyNames'))
         })
         consume('propertyNames')
