@@ -1,8 +1,28 @@
-const { format: utilFormat } = require('util')
 const jaystring = require('./jaystring')
 
 const INDENT_START = /[{[]/
 const INDENT_END = /[}\]]/
+
+const format = (fmt, ...args) => {
+  const res = fmt.replace(/%[%ds]/g, (match) => {
+    if (match === '%%') return '%'
+    if (args.length === 0) throw new Error('Unexpected arguments count')
+    const val = args.shift()
+    switch (match) {
+      case '%d':
+        if (typeof val === 'number') return val
+        throw new Error('Expected a number')
+      case '%s':
+        if (typeof val === 'string') return val
+        throw new Error('Expected a string')
+      case '%%':
+        return '%'
+    }
+    throw new Error(`Unreachable`)
+  })
+  if (args.length !== 0) throw new Error('Unexpected arguments count')
+  return res
+}
 
 module.exports = () => {
   const lines = []
@@ -22,7 +42,7 @@ module.exports = () => {
     write(fmt, ...args) {
       if (typeof fmt !== 'string') throw new Error('Format must be a string!')
       if (fmt.includes('\n')) throw new Error('Only single lines are supported')
-      pushLine(args.length > 0 ? utilFormat(fmt, ...args) : fmt)
+      pushLine(args.length > 0 ? format(fmt, ...args) : fmt)
     },
 
     size() {
