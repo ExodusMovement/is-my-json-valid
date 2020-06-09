@@ -17,8 +17,6 @@ const format = (fmt, ...args) => {
         throw new Error('Expected a string')
       case '%j':
         return JSON.stringify(val)
-      case '%%':
-        return '%'
     }
     throw new Error(`Unreachable`)
   })
