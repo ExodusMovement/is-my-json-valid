@@ -409,9 +409,9 @@ const compile = (schema, root, opts, scope, basePathRoot) => {
             rule(genobj(name, p), node.items[p], subPath(`${p}`))
         } else {
           const i = genloop()
-          fun.write('for (let %s = 0; %s < %s.length; %s++) {', i, i, name, i)
-          rule(`${name}[${i}]`, node.items, subPath('items'))
-          fun.write('}')
+          fun.block('for (let %s = 0; %s < %s.length; %s++) {', [i, i, name, i], '}', () => {
+            rule(`${name}[${i}]`, node.items, subPath('items'))
+          })
         }
         consume('items')
       } else if (typeApplicable('array')) {
@@ -429,9 +429,10 @@ const compile = (schema, root, opts, scope, basePathRoot) => {
         consume('additionalItems')
       } else if (node.additionalItems) {
         const i = genloop()
-        fun.write('for (let %s = %d; %s < %s.length; %s++) {', i, node.items.length, i, name, i)
-        rule(`${name}[${i}]`, node.additionalItems, subPath('additionalItems'))
-        fun.write('}')
+        const offset = node.items.length
+        fun.block('for (let %s = %d; %s < %s.length; %s++) {', [i, offset, i, name, i], '}', () => {
+          rule(`${name}[${i}]`, node.additionalItems, subPath('additionalItems'))
+        })
         consume('additionalItems')
       } else if (node.items.length === node.maxItems) {
         // No additional items are possible
@@ -507,13 +508,13 @@ const compile = (schema, root, opts, scope, basePathRoot) => {
 
       if (typeof node.propertyNames === 'object' || typeof node.propertyNames === 'boolean') {
         const key = gensym('key')
-        fun.write('for (const %s of Object.keys(%s)) {', key, name)
-        const nameSchema =
-          typeof node.propertyNames === 'object'
-            ? { type: 'string', ...node.propertyNames }
-            : node.propertyNames
-        rule(key, nameSchema, subPath('propertyNames'))
-        fun.write('}')
+        fun.block('for (const %s of Object.keys(%s)) {', [key, name], '}', () => {
+          const nameSchema =
+            typeof node.propertyNames === 'object'
+              ? { type: 'string', ...node.propertyNames }
+              : node.propertyNames
+          rule(key, nameSchema, subPath('propertyNames'))
+        })
         consume('propertyNames')
       }
       if (typeof node.additionalProperties === 'object' && typeof node.propertyNames !== 'object') {
@@ -544,9 +545,9 @@ const compile = (schema, root, opts, scope, basePathRoot) => {
             error('dependencies not set')
             fun.write('}')
           } else if (typeof deps === 'object' || typeof deps === 'boolean') {
-            fun.write('if (%s !== undefined) {', item)
-            rule(name, deps, subPath('dependencies', key))
-            fun.write('}')
+            fun.block('if (%s !== undefined) {', [item], '}', () => {
+              rule(name, deps, subPath('dependencies', key))
+            })
           } else {
             fail('Unexpected dependencies entry')
           }
@@ -563,13 +564,13 @@ const compile = (schema, root, opts, scope, basePathRoot) => {
 
       if (node.patternProperties) {
         const key = gensym('key')
-        fun.write('for (const %s of Object.keys(%s)) {', key, name)
-        for (const p of Object.keys(node.patternProperties)) {
-          fun.write('if (%s.test(%s)) {', patterns(p), key)
-          rule(`${name}[${key}]`, node.patternProperties[p], subPath('patternProperties', p))
-          fun.write('}')
-        }
-        fun.write('}')
+        fun.block('for (const %s of Object.keys(%s)) {', [key, name], '}', () => {
+          for (const p of Object.keys(node.patternProperties)) {
+            fun.block('if (%s.test(%s)) {', [patterns(p), key], '}', () => {
+              rule(`${name}[${key}]`, node.patternProperties[p], subPath('patternProperties', p))
+            })
+          }
+        })
         consume('patternProperties')
       }
 
@@ -577,23 +578,20 @@ const compile = (schema, root, opts, scope, basePathRoot) => {
         const key = gensym('key')
         const toCompare = (p) => `${key} !== ${JSON.stringify(p)}`
         const toTest = (p) => `!${patterns(p)}.test(${key})`
-
         const additionalProp =
           Object.keys(node.properties || {})
             .map(toCompare)
             .concat(Object.keys(node.patternProperties || {}).map(toTest))
             .join(' && ') || 'true'
-
-        fun.write('for (const %s of Object.keys(%s)) {', key, name)
-        fun.write('if (%s) {', additionalProp)
-        if (node.additionalProperties === false) {
-          error('has additional properties', null, `${JSON.stringify(`${name}.`)} + ${key}`)
-        } else {
-          rule(`${name}[${key}]`, node.additionalProperties, subPath('additionalProperties'))
-        }
-        fun.write('}')
-        fun.write('}')
-
+        fun.block('for (const %s of Object.keys(%s)) {', [key, name], '}', () => {
+          fun.block('if (%s) {', [additionalProp], '}', () => {
+            if (node.additionalProperties === false) {
+              error('has additional properties', null, `${JSON.stringify(`${name}.`)} + ${key}`)
+            } else {
+              rule(`${name}[${key}]`, node.additionalProperties, subPath('additionalProperties'))
+            }
+          })
+        })
         consume('additionalProperties')
       } else if (typeApplicable('object')) {
         enforceValidation('additionalProperties rule must be specified')
