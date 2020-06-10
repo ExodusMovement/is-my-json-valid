@@ -37,8 +37,6 @@ const stringify = {
 
     throw new Error('Can not stringify an object with unexpected prototype')
   },
-
-  symbol: (symbol) => `Symbol(${JSON.stringify(symbol.description)})`,
 }
 
 function jaystring(item) {
